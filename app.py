@@ -4,18 +4,24 @@ from datetime import datetime, timedelta
 import streamlit.components.v1 as components
 
 # 1. Configuração da Página
-st.set_page_config(page_title="Timers COD", layout="wide")
+st.set_page_config(page_title="Timers COD - Persistente", layout="wide")
 
-# 2. CSS Avançado
+# 2. CACHE PERSISTENTE (O segredo para não resetar)
+# Este dicionário fica salvo no servidor, independente de quem acessa ou se a aba fecha.
+@st.cache_resource
+def get_global_timers():
+    return {}
+
+global_timers = get_global_timers()
+
+# 3. CSS (Mantendo seu estilo visual)
 st.markdown("""
     <style>
     header {visibility: hidden;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 0rem; }
-    
     .timer-card {
         background-color: #161b22;
         padding: 20px 20px 75px 20px;
@@ -24,60 +30,35 @@ st.markdown("""
         text-align: center;
         transition: 0.3s;
     }
-    
     .timer-ready {
         border: 2px solid #3fb950 !important;
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3);
         background-color: rgba(63, 185, 80, 0.05) !important;
     }
-    
     .account-label { font-size: 16px; font-weight: bold; color: #8b949e; margin-bottom: 2px; }
     .cycle-label { font-size: 12px; color: #8b949e; }
     .timer-text { font-size: 32px; font-weight: bold; margin: 10px 0; font-family: 'Courier New', Courier, monospace; }
-    
-    [data-testid="stButton"] {
-        margin-top: -65px !important; 
-        padding: 0 15% !important;    
-        position: relative;
-        z-index: 10;
-    }
-
-    [data-testid="stButton"] button { 
-        background-color: #21262d !important;
-        color: white !important;
-        border: 1px solid #30363d !important;
-        border-radius: 8px !important;
-        height: 38px !important;
-    }
-    
-    [data-testid="stButton"] button:hover {
-        border-color: #58a6ff !important;
-        color: #58a6ff !important;
-        background-color: #30363d !important;
-    }
-
+    [data-testid="stButton"] { margin-top: -65px !important; padding: 0 15% !important; position: relative; z-index: 10; }
+    [data-testid="stButton"] button { background-color: #21262d !important; color: white !important; border: 1px solid #30363d !important; border-radius: 8px !important; height: 38px !important; }
+    [data-testid="stButton"] button:hover { border-color: #58a6ff !important; color: #58a6ff !important; background-color: #30363d !important; }
     .logo-spacer { margin-bottom: 50px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. Logo (Call of Dragons)
+# 4. Logo e Cabeçalho
 col_l, col_m, col_r = st.columns([1, 2, 1])
 with col_m:
     st.image("1679019533_0X730X6C0X6F0X67.png", use_container_width=True)
-
 st.markdown('<div class="logo-spacer"></div>', unsafe_allow_html=True)
 
-# 4. Criação da Lista de Contas (Apenas os 10 originais)
+# 5. Lista de Contas
 contas = []
 for i in range(2, 12):
     duracao_min = 210 if i >= 9 else 180
     label = "3h 30min" if i >= 9 else "3h 00min"
     contas.append({"id": f"MKR {i}", "nome": f"Fazendeiro MKR {i}", "duracao_seg": duracao_min * 60, "label": label})
 
-# 5. Estado dos Timers e Controle de Áudio
-if 'timers' not in st.session_state:
-    st.session_state.timers = {c["id"]: None for c in contas}
-
+# Inicializa o controle de bipe (este é por aba aberta)
 if 'beep_played' not in st.session_state:
     st.session_state.beep_played = {c["id"]: False for c in contas}
 
@@ -94,8 +75,10 @@ for idx, conta in enumerate(contas):
         cor_timer = "#484f58"
         card_class = "timer-card"
         
-        if st.session_state.timers[id_conta] is not None:
-            restante = st.session_state.timers[id_conta] - datetime.now()
+        # BUSCA NO DICIONÁRIO GLOBAL (SERVIDOR)
+        if id_conta in global_timers:
+            tempo_fim = global_timers[id_conta]
+            restante = tempo_fim - datetime.now()
             
             if restante.total_seconds() > 0:
                 h, r = divmod(int(restante.total_seconds()), 3600)
@@ -107,7 +90,7 @@ for idx, conta in enumerate(contas):
                 cor_timer = "#3fb950" 
                 card_class = "timer-card timer-ready" 
                 
-                if not st.session_state.beep_played[id_conta]:
+                if not st.session_state.beep_played.get(id_conta, False):
                     tocar_bip = True
                     st.session_state.beep_played[id_conta] = True
         
@@ -119,12 +102,13 @@ for idx, conta in enumerate(contas):
             </div>
         """, unsafe_allow_html=True)
         
+        # BOTÃO INICIAR (SALVA NO SERVIDOR)
         if st.button(f"Iniciar {id_conta}", key=f"btn_{id_conta}", use_container_width=True):
-            st.session_state.timers[id_conta] = datetime.now() + timedelta(seconds=conta["duracao_seg"])
+            global_timers[id_conta] = datetime.now() + timedelta(seconds=conta["duracao_seg"])
             st.session_state.beep_played[id_conta] = False
             st.rerun()
 
-# 7. Sistema de Áudio à Prova de Falhas via JavaScript
+# 7. Sistema de Áudio
 if tocar_bip:
     uid = time.time()
     codigo_js = f"""
