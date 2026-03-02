@@ -13,7 +13,7 @@ def get_global_timers():
 
 global_timers = get_global_timers()
 
-# 3. CSS com Fontes Equilibradas (Redução de 50% da versão anterior)
+# 3. CSS com Fontes Equilibradas
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -39,7 +39,7 @@ st.markdown("""
         background-color: rgba(63, 185, 80, 0.05) !important;
     }
     
-    /* FONTES AJUSTADAS (-50% da GG) */
+    /* FONTES AJUSTADAS */
     .account-label { font-size: 18px; font-weight: bold; color: #8b949e; margin-bottom: 2px; }
     .cycle-label { font-size: 14px; color: #8b949e; margin-bottom: 8px; }
     .timer-text { 
@@ -85,12 +85,12 @@ with col_m:
     st.image("1679019533_0X730X6C0X6F0X67.png", use_container_width=True)
 st.markdown('<div class="logo-spacer"></div>', unsafe_allow_html=True)
 
-# 5. Lista de Contas
+# 5. Lista de Contas (Restaurado para "Fazendeiro MKR X")
 contas = []
 for i in range(2, 12):
     duracao_min = 210 if i >= 9 else 180
     label = "3h 30m" if i >= 9 else "3h 00m"
-    contas.append({"id": f"MKR {i}", "nome": f"MKR {i}", "duracao_seg": duracao_min * 60, "label": label})
+    contas.append({"id": f"MKR {i}", "nome": f"Fazendeiro MKR {i}", "duracao_seg": duracao_min * 60, "label": label})
 
 if 'beep_played' not in st.session_state:
     st.session_state.beep_played = {c["id"]: False for c in contas}
