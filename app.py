@@ -13,7 +13,7 @@ def get_global_timers():
 
 global_timers = get_global_timers()
 
-# 3. CSS com Fontes Equilibradas
+# 3. CSS com Cronômetro Ampliado
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -26,7 +26,7 @@ st.markdown("""
     /* Card Ajustado */
     .timer-card {
         background-color: #161b22;
-        padding: 20px 15px 75px 15px;
+        padding: 20px 15px 85px 15px; /* Aumentado um pouco o respiro inferior */
         border-radius: 12px;
         border: 1px solid #30363d;
         text-align: center;
@@ -39,11 +39,13 @@ st.markdown("""
         background-color: rgba(63, 185, 80, 0.05) !important;
     }
     
-    /* FONTES AJUSTADAS */
+    /* FONTES */
     .account-label { font-size: 18px; font-weight: bold; color: #8b949e; margin-bottom: 2px; }
     .cycle-label { font-size: 14px; color: #8b949e; margin-bottom: 8px; }
+    
+    /* CRONÔMETRO +50% (de 36px para 54px) */
     .timer-text { 
-        font-size: 36px; 
+        font-size: 54px; 
         font-weight: bold; 
         margin: 10px 0; 
         font-family: 'Courier New', Courier, monospace; 
@@ -51,7 +53,7 @@ st.markdown("""
     
     /* Botão Centralizado */
     [data-testid="stButton"] {
-        margin-top: -65px !important;
+        margin-top: -75px !important; /* Ajustado para a nova altura do card */
         padding: 0 15% !important;
         position: relative;
         z-index: 10;
@@ -85,7 +87,7 @@ with col_m:
     st.image("1679019533_0X730X6C0X6F0X67.png", use_container_width=True)
 st.markdown('<div class="logo-spacer"></div>', unsafe_allow_html=True)
 
-# 5. Lista de Contas (Restaurado para "Fazendeiro MKR X")
+# 5. Lista de Contas
 contas = []
 for i in range(2, 12):
     duracao_min = 210 if i >= 9 else 180
