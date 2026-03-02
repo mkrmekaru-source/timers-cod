@@ -13,7 +13,7 @@ def get_global_timers():
 
 global_timers = get_global_timers()
 
-# 3. CSS com Cronômetro Ampliado
+# 3. CSS com Cronômetro Dinâmico
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -23,10 +23,9 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 0rem; }
     
-    /* Card Ajustado */
     .timer-card {
         background-color: #161b22;
-        padding: 20px 15px 85px 15px; /* Aumentado um pouco o respiro inferior */
+        padding: 20px 15px 85px 15px;
         border-radius: 12px;
         border: 1px solid #30363d;
         text-align: center;
@@ -39,11 +38,9 @@ st.markdown("""
         background-color: rgba(63, 185, 80, 0.05) !important;
     }
     
-    /* FONTES */
     .account-label { font-size: 18px; font-weight: bold; color: #8b949e; margin-bottom: 2px; }
     .cycle-label { font-size: 14px; color: #8b949e; margin-bottom: 8px; }
     
-    /* CRONÔMETRO +50% (de 36px para 54px) */
     .timer-text { 
         font-size: 54px; 
         font-weight: bold; 
@@ -51,9 +48,8 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    /* Botão Centralizado */
     [data-testid="stButton"] {
-        margin-top: -75px !important; /* Ajustado para a nova altura do card */
+        margin-top: -75px !important;
         padding: 0 15% !important;
         position: relative;
         z-index: 10;
@@ -107,21 +103,29 @@ for idx, conta in enumerate(contas):
     
     with cols[idx % 5]:
         texto_timer = "00:00:00"
-        cor_timer = "#484f58"
+        cor_timer = "#484f58" # Cor padrão quando parado
         card_class = "timer-card"
         
         if id_conta in global_timers:
             tempo_fim = global_timers[id_conta]
             restante = tempo_fim - datetime.now()
+            segundos_restantes = restante.total_seconds()
             
-            if restante.total_seconds() > 0:
-                h, r = divmod(int(restante.total_seconds()), 3600)
+            if segundos_restantes > 0:
+                h, r = divmod(int(segundos_restantes), 3600)
                 m, s = divmod(r, 60)
                 texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
-                cor_timer = "#58a6ff" 
+                
+                # LÓGICA DE CORES
+                if segundos_restantes > 7200: # Mais de 2 horas
+                    cor_timer = "#58a6ff" # Azul
+                elif segundos_restantes > 3600: # Entre 1 e 2 horas
+                    cor_timer = "#ffa500" # Laranja
+                else: # Menos de 1 hora
+                    cor_timer = "#ff4b4b" # Vermelho
             else:
                 texto_timer = "PRONTO!"
-                cor_timer = "#3fb950" 
+                cor_timer = "#3fb950" # Verde
                 card_class = "timer-card timer-ready" 
                 
                 if not st.session_state.beep_played.get(id_conta, False):
