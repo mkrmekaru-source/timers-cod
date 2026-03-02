@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import streamlit.components.v1 as components
 
 # 1. Configuração da Página
-st.set_page_config(page_title="Timers COD - GG", layout="wide")
+st.set_page_config(page_title="Timers COD", layout="wide")
 
 # 2. CACHE PERSISTENTE (Mantém os dados no servidor)
 @st.cache_resource
@@ -13,7 +13,7 @@ def get_global_timers():
 
 global_timers = get_global_timers()
 
-# 3. CSS com FONTES DUPLICADAS
+# 3. CSS com Fontes Equilibradas (Redução de 50% da versão anterior)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -23,36 +23,36 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 0rem; }
     
-    /* O Quadrado (Card) - Ajustado para fontes maiores */
+    /* Card Ajustado */
     .timer-card {
         background-color: #161b22;
-        padding: 30px 20px 100px 20px; /* Aumentado para acomodar o botão maior */
-        border-radius: 15px;
+        padding: 20px 15px 75px 15px;
+        border-radius: 12px;
         border: 1px solid #30363d;
         text-align: center;
         transition: 0.3s;
     }
     
     .timer-ready {
-        border: 3px solid #3fb950 !important;
-        box-shadow: 0 0 25px rgba(63, 185, 80, 0.4);
-        background-color: rgba(63, 185, 80, 0.08) !important;
+        border: 2px solid #3fb950 !important;
+        box-shadow: 0 0 15px rgba(63, 185, 80, 0.3);
+        background-color: rgba(63, 185, 80, 0.05) !important;
     }
     
-    /* FONTES DOBRADAS */
-    .account-label { font-size: 32px; font-weight: bold; color: #8b949e; margin-bottom: 5px; }
-    .cycle-label { font-size: 24px; color: #8b949e; margin-bottom: 15px; }
+    /* FONTES AJUSTADAS (-50% da GG) */
+    .account-label { font-size: 18px; font-weight: bold; color: #8b949e; margin-bottom: 2px; }
+    .cycle-label { font-size: 14px; color: #8b949e; margin-bottom: 8px; }
     .timer-text { 
-        font-size: 64px; /* Dobro do anterior (32px -> 64px) */
+        font-size: 36px; 
         font-weight: bold; 
-        margin: 20px 0; 
+        margin: 10px 0; 
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    /* Botão maior e centralizado */
+    /* Botão Centralizado */
     [data-testid="stButton"] {
-        margin-top: -90px !important; /* Ajustado para subir para dentro do card maior */
-        padding: 0 10% !important;
+        margin-top: -65px !important;
+        padding: 0 15% !important;
         position: relative;
         z-index: 10;
         display: flex;
@@ -62,10 +62,10 @@ st.markdown("""
     [data-testid="stButton"] button { 
         background-color: #21262d !important;
         color: white !important;
-        border: 2px solid #30363d !important;
-        border-radius: 12px !important;
-        height: 60px !important; /* Botão mais alto */
-        font-size: 24px !important; /* Fonte do botão dobrada */
+        border: 1px solid #30363d !important;
+        border-radius: 8px !important;
+        height: 40px !important;
+        font-size: 14px !important;
         width: 100% !important;
     }
     
@@ -75,7 +75,7 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    .logo-spacer { margin-bottom: 60px; }
+    .logo-spacer { margin-bottom: 40px; }
     </style>
     """, unsafe_allow_html=True)
 
