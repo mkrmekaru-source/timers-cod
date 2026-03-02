@@ -4,48 +4,82 @@ from datetime import datetime, timedelta
 import streamlit.components.v1 as components
 
 # 1. Configuração da Página
-st.set_page_config(page_title="Timers COD - Persistente", layout="wide")
+st.set_page_config(page_title="Timers COD - GG", layout="wide")
 
-# 2. CACHE PERSISTENTE (O segredo para não resetar)
-# Este dicionário fica salvo no servidor, independente de quem acessa ou se a aba fecha.
+# 2. CACHE PERSISTENTE (Mantém os dados no servidor)
 @st.cache_resource
 def get_global_timers():
     return {}
 
 global_timers = get_global_timers()
 
-# 3. CSS (Mantendo seu estilo visual)
+# 3. CSS com FONTES DUPLICADAS
 st.markdown("""
     <style>
     header {visibility: hidden;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
+    
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 0rem; }
+    
+    /* O Quadrado (Card) - Ajustado para fontes maiores */
     .timer-card {
         background-color: #161b22;
-        padding: 20px 20px 75px 20px;
-        border-radius: 12px;
+        padding: 30px 20px 100px 20px; /* Aumentado para acomodar o botão maior */
+        border-radius: 15px;
         border: 1px solid #30363d;
         text-align: center;
         transition: 0.3s;
     }
+    
     .timer-ready {
-        border: 2px solid #3fb950 !important;
-        box-shadow: 0 0 15px rgba(63, 185, 80, 0.3);
-        background-color: rgba(63, 185, 80, 0.05) !important;
+        border: 3px solid #3fb950 !important;
+        box-shadow: 0 0 25px rgba(63, 185, 80, 0.4);
+        background-color: rgba(63, 185, 80, 0.08) !important;
     }
-    .account-label { font-size: 16px; font-weight: bold; color: #8b949e; margin-bottom: 2px; }
-    .cycle-label { font-size: 12px; color: #8b949e; }
-    .timer-text { font-size: 32px; font-weight: bold; margin: 10px 0; font-family: 'Courier New', Courier, monospace; }
-    [data-testid="stButton"] { margin-top: -65px !important; padding: 0 15% !important; position: relative; z-index: 10; }
-    [data-testid="stButton"] button { background-color: #21262d !important; color: white !important; border: 1px solid #30363d !important; border-radius: 8px !important; height: 38px !important; }
-    [data-testid="stButton"] button:hover { border-color: #58a6ff !important; color: #58a6ff !important; background-color: #30363d !important; }
-    .logo-spacer { margin-bottom: 50px; }
+    
+    /* FONTES DOBRADAS */
+    .account-label { font-size: 32px; font-weight: bold; color: #8b949e; margin-bottom: 5px; }
+    .cycle-label { font-size: 24px; color: #8b949e; margin-bottom: 15px; }
+    .timer-text { 
+        font-size: 64px; /* Dobro do anterior (32px -> 64px) */
+        font-weight: bold; 
+        margin: 20px 0; 
+        font-family: 'Courier New', Courier, monospace; 
+    }
+    
+    /* Botão maior e centralizado */
+    [data-testid="stButton"] {
+        margin-top: -90px !important; /* Ajustado para subir para dentro do card maior */
+        padding: 0 10% !important;
+        position: relative;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+    }
+
+    [data-testid="stButton"] button { 
+        background-color: #21262d !important;
+        color: white !important;
+        border: 2px solid #30363d !important;
+        border-radius: 12px !important;
+        height: 60px !important; /* Botão mais alto */
+        font-size: 24px !important; /* Fonte do botão dobrada */
+        width: 100% !important;
+    }
+    
+    [data-testid="stButton"] button:hover {
+        border-color: #58a6ff !important;
+        color: #58a6ff !important;
+        background-color: #30363d !important;
+    }
+
+    .logo-spacer { margin-bottom: 60px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 4. Logo e Cabeçalho
+# 4. Logo
 col_l, col_m, col_r = st.columns([1, 2, 1])
 with col_m:
     st.image("1679019533_0X730X6C0X6F0X67.png", use_container_width=True)
@@ -55,10 +89,9 @@ st.markdown('<div class="logo-spacer"></div>', unsafe_allow_html=True)
 contas = []
 for i in range(2, 12):
     duracao_min = 210 if i >= 9 else 180
-    label = "3h 30min" if i >= 9 else "3h 00min"
-    contas.append({"id": f"MKR {i}", "nome": f"Fazendeiro MKR {i}", "duracao_seg": duracao_min * 60, "label": label})
+    label = "3h 30m" if i >= 9 else "3h 00m"
+    contas.append({"id": f"MKR {i}", "nome": f"MKR {i}", "duracao_seg": duracao_min * 60, "label": label})
 
-# Inicializa o controle de bipe (este é por aba aberta)
 if 'beep_played' not in st.session_state:
     st.session_state.beep_played = {c["id"]: False for c in contas}
 
@@ -75,7 +108,6 @@ for idx, conta in enumerate(contas):
         cor_timer = "#484f58"
         card_class = "timer-card"
         
-        # BUSCA NO DICIONÁRIO GLOBAL (SERVIDOR)
         if id_conta in global_timers:
             tempo_fim = global_timers[id_conta]
             restante = tempo_fim - datetime.now()
@@ -102,13 +134,12 @@ for idx, conta in enumerate(contas):
             </div>
         """, unsafe_allow_html=True)
         
-        # BOTÃO INICIAR (SALVA NO SERVIDOR)
         if st.button(f"Iniciar {id_conta}", key=f"btn_{id_conta}", use_container_width=True):
             global_timers[id_conta] = datetime.now() + timedelta(seconds=conta["duracao_seg"])
             st.session_state.beep_played[id_conta] = False
             st.rerun()
 
-# 7. Sistema de Áudio
+# 7. Sistema de Áudio (JavaScript)
 if tocar_bip:
     uid = time.time()
     codigo_js = f"""
@@ -122,6 +153,6 @@ if tocar_bip:
     """
     components.html(codigo_js, height=0, width=0)
 
-# 8. Atualização Automática
+# 8. Refresh
 time.sleep(1)
 st.rerun()
