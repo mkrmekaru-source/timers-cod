@@ -83,11 +83,19 @@ with col_m:
     st.image("1679019533_0X730X6C0X6F0X67.png", use_container_width=True)
 st.markdown('<div class="logo-spacer"></div>', unsafe_allow_html=True)
 
-# 5. Lista de Contas
+# 5. Lista de Contas (Nova regra de horas para 9 e 10)
 contas = []
 for i in range(2, 12):
-    duracao_min = 210 if i >= 9 else 180
-    label = "3h 30m" if i >= 9 else "3h 00m"
+    if i in [9, 10]:
+        duracao_min = 240
+        label = "4h 00m"
+    elif i == 11:
+        duracao_min = 210
+        label = "3h 30m"
+    else:
+        duracao_min = 180
+        label = "3h 00m"
+        
     contas.append({"id": f"MKR {i}", "nome": f"Fazendeiro MKR {i}", "duracao_seg": duracao_min * 60, "label": label})
 
 if 'beep_played' not in st.session_state:
