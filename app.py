@@ -1,22 +1,24 @@
 import streamlit as st
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import streamlit.components.v1 as components
 
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. CACHE PERSISTENTE (Mantém os dados no servidor)
+# 2. CACHE PERSISTENTE (V2 para limpar a memória antiga e resolver o erro)
 @st.cache_resource
-def get_global_timers():
+def get_global_timers_v2():
     return {}
 
-global_timers = get_global_timers()
+global_timers = get_global_timers_v2()
 
-# Fuso horário do Brasil (UTC-3) para garantir que o Streamlit Cloud mostre a hora certa
-fuso_br = timezone(timedelta(hours=-3))
+# 3. Função de Tempo (Horário de Brasília) sem conflito de formato
+def agora_br():
+    # Pega a hora universal (UTC) do servidor e diminui 3 horas
+    return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS com Cronômetro Dinâmico e Horário de Término
+# 4. CSS
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -81,13 +83,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 4. Logo
+# 5. Logo
 col_l, col_m, col_r = st.columns([1, 2, 1])
 with col_m:
     st.image("1679019533_0X730X6C0X6F0X67.png", use_container_width=True)
 st.markdown('<div class="logo-spacer"></div>', unsafe_allow_html=True)
 
-# 5. Lista de Contas (Todos com 3 horas)
+# 6. Lista de Contas (Todos com 3 horas)
 contas = []
 for i in range(2, 12):
     duracao_min = 180
@@ -99,7 +101,7 @@ if 'beep_played' not in st.session_state:
 
 tocar_bip = False
 
-# 6. Layout 5 colunas
+# 7. Layout 5 colunas
 cols = st.columns(5)
 
 for idx, conta in enumerate(contas):
@@ -107,13 +109,13 @@ for idx, conta in enumerate(contas):
     
     with cols[idx % 5]:
         texto_timer = "00:00:00"
-        texto_termino = "Termina às: --:--" # Padrão quando zerado
+        texto_termino = "Termina às: --:--" 
         cor_timer = "#484f58"
         card_class = "timer-card"
         
         if id_conta in global_timers:
             tempo_fim = global_timers[id_conta]
-            restante = tempo_fim - datetime.now(fuso_br)
+            restante = tempo_fim - agora_br()
             segundos_restantes = restante.total_seconds()
             
             if segundos_restantes > 0:
@@ -123,16 +125,16 @@ for idx, conta in enumerate(contas):
                 texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
                 
                 # LÓGICA DE CORES
-                if segundos_restantes > 7200: # Mais de 2 horas
-                    cor_timer = "#58a6ff" # Azul
-                elif segundos_restantes > 3600: # Entre 1 e 2 horas
-                    cor_timer = "#ffa500" # Laranja
-                else: # Menos de 1 hora
-                    cor_timer = "#ff4b4b" # Vermelho
+                if segundos_restantes > 7200:
+                    cor_timer = "#58a6ff" 
+                elif segundos_restantes > 3600:
+                    cor_timer = "#ffa500" 
+                else: 
+                    cor_timer = "#ff4b4b" 
             else:
                 texto_timer = "PRONTO!"
                 texto_termino = "Termina às: AGORA"
-                cor_timer = "#3fb950" # Verde
+                cor_timer = "#3fb950" 
                 card_class = "timer-card timer-ready" 
                 
                 if not st.session_state.beep_played.get(id_conta, False):
@@ -149,11 +151,11 @@ for idx, conta in enumerate(contas):
         """, unsafe_allow_html=True)
         
         if st.button(f"Iniciar {id_conta}", key=f"btn_{id_conta}", use_container_width=True):
-            global_timers[id_conta] = datetime.now(fuso_br) + timedelta(seconds=conta["duracao_seg"])
+            global_timers[id_conta] = agora_br() + timedelta(seconds=conta["duracao_seg"])
             st.session_state.beep_played[id_conta] = False
             st.rerun()
 
-# 7. Sistema de Áudio (JavaScript)
+# 8. Sistema de Áudio (JavaScript)
 if tocar_bip:
     uid = time.time()
     codigo_js = f"""
@@ -167,6 +169,6 @@ if tocar_bip:
     """
     components.html(codigo_js, height=0, width=0)
 
-# 8. Refresh
+# 9. Refresh
 time.sleep(1)
 st.rerun()
