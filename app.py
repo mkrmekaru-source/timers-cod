@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import streamlit.components.v1 as components
 
 # 1. Configuração da Página
@@ -13,7 +13,10 @@ def get_global_timers():
 
 global_timers = get_global_timers()
 
-# 3. CSS com Cronômetro Dinâmico
+# Fuso horário do Brasil (UTC-3) para garantir que o Streamlit Cloud mostre a hora certa
+fuso_br = timezone(timedelta(hours=-3))
+
+# 3. CSS com Cronômetro Dinâmico e Horário de Término
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -39,7 +42,8 @@ st.markdown("""
     }
     
     .account-label { font-size: 18px; font-weight: bold; color: #8b949e; margin-bottom: 2px; }
-    .cycle-label { font-size: 14px; color: #8b949e; margin-bottom: 8px; }
+    .cycle-label { font-size: 14px; color: #8b949e; margin-bottom: 2px; }
+    .end-time-label { font-size: 13px; color: #58a6ff; margin-bottom: 8px; font-style: italic; }
     
     .timer-text { 
         font-size: 54px; 
@@ -103,18 +107,20 @@ for idx, conta in enumerate(contas):
     
     with cols[idx % 5]:
         texto_timer = "00:00:00"
-        cor_timer = "#484f58" # Cor padrão quando parado
+        texto_termino = "Termina às: --:--" # Padrão quando zerado
+        cor_timer = "#484f58"
         card_class = "timer-card"
         
         if id_conta in global_timers:
             tempo_fim = global_timers[id_conta]
-            restante = tempo_fim - datetime.now()
+            restante = tempo_fim - datetime.now(fuso_br)
             segundos_restantes = restante.total_seconds()
             
             if segundos_restantes > 0:
                 h, r = divmod(int(segundos_restantes), 3600)
                 m, s = divmod(r, 60)
                 texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
+                texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
                 
                 # LÓGICA DE CORES
                 if segundos_restantes > 7200: # Mais de 2 horas
@@ -125,6 +131,7 @@ for idx, conta in enumerate(contas):
                     cor_timer = "#ff4b4b" # Vermelho
             else:
                 texto_timer = "PRONTO!"
+                texto_termino = "Termina às: AGORA"
                 cor_timer = "#3fb950" # Verde
                 card_class = "timer-card timer-ready" 
                 
@@ -136,12 +143,13 @@ for idx, conta in enumerate(contas):
             <div class="{card_class}">
                 <div class="account-label">{conta["nome"]}</div>
                 <div class="cycle-label">Ciclo: {conta["label"]}</div>
+                <div class="end-time-label">{texto_termino}</div>
                 <div class="timer-text" style="color: {cor_timer};">{texto_timer}</div>
             </div>
         """, unsafe_allow_html=True)
         
         if st.button(f"Iniciar {id_conta}", key=f"btn_{id_conta}", use_container_width=True):
-            global_timers[id_conta] = datetime.now() + timedelta(seconds=conta["duracao_seg"])
+            global_timers[id_conta] = datetime.now(fuso_br) + timedelta(seconds=conta["duracao_seg"])
             st.session_state.beep_played[id_conta] = False
             st.rerun()
 
