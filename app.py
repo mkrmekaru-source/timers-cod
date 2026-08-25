@@ -6,10 +6,9 @@ import streamlit.components.v1 as components
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. CACHE PERSISTENTE V5 (Gerencia lista dinâmica de contas e tempos no servidor)
+# 2. CACHE PERSISTENTE V6 (Limpa o cache antigo e garante a nova estrutura)
 @st.cache_resource
-def get_global_data():
-    # Lista inicial padrão com os 10 fazendeiros originais (em minutos: 180 min = 3h)
+def get_global_data_v6():
     contas_iniciais = []
     for i in range(2, 12):
         contas_iniciais.append({
@@ -22,9 +21,9 @@ def get_global_data():
         "contas": contas_iniciais
     }
 
-dados_globais = get_global_data()
-global_timers = dados_globais["timers"]
-lista_contas = dados_globais["contas"]
+dados_globais = get_global_data_v6()
+global_timers = dados_globais.setdefault("timers", {})
+lista_contas = dados_globais.setdefault("contas", [])
 
 # 3. Função de Tempo (Horário de Brasília)
 def agora_br():
@@ -116,7 +115,6 @@ if len(lista_contas) > 0:
         nome_conta = conta["nome"]
         minutos = conta["minutos"]
         
-        # Formata o label do ciclo (ex: se for 180 min, mostra 3h 00m)
         h_ciclo, m_ciclo = divmod(minutos, 60)
         label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
         
@@ -138,13 +136,12 @@ if len(lista_contas) > 0:
                     texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
                     texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
                     
-                    # Cores proporcionais
                     if segundos_restantes > (duracao_seg / 2):
-                        cor_timer = "#58a6ff" # Azul
+                        cor_timer = "#58a6ff" 
                     elif segundos_restantes > 3600:
-                        cor_timer = "#ffa500" # Laranja
+                        cor_timer = "#ffa500" 
                     else:
-                        cor_timer = "#ff4b4b" # Vermelho
+                        cor_timer = "#ff4b4b" 
                 else:
                     texto_timer = "PRONTO!"
                     texto_termino = "Termina às: AGORA"
