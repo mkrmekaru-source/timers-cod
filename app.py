@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COM ALINHAMENTO MILIMÉTRICO DAS LINHAS
+# 3. CSS COMPLETO E DEFINITIVO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -34,6 +34,7 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 3rem; }
     
+    /* Cartões do Topo Idênticos à Referência */
     .timer-card {
         background-color: #161b22;
         padding: 20px 15px 75px 15px;
@@ -61,6 +62,16 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
+    /* Encaixe perfeito do botão Iniciar no topo */
+    [data-testid="stButton"] {
+        margin-top: -65px !important;
+        padding: 0 10% !important;
+        position: relative;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+    }
+
     [data-testid="stButton"] button { 
         background-color: #21262d !important;
         color: white !important;
@@ -77,9 +88,10 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    /* Alinhamento perfeito dos botões de gerenciar com os inputs */
-    .manage-btn-col {
+    /* Correção específica para alinhar perfeitamente os botões da parte inferior */
+    div[data-testid="column"] .stButton {
         margin-top: 0px !important;
+        padding: 0px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -163,7 +175,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado e Proporcional)
+# 6. PAINEL DE CONFIGURAÇÃO (Alinhado e Simétrico)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -175,15 +187,13 @@ with col_center:
     
     with st.container(border=True):
         with st.form("form_adicionar", clear_on_submit=True):
-            col_a1, col_a2, col_a3 = st.columns([2, 1, 1])
+            col_a1, col_a2 = st.columns([2, 1])
             with col_a1:
                 novo_nome = st.text_input("Nome do Fazendeiro", placeholder="Ex: MKR 12")
             with col_a2:
                 novos_minutos = st.number_input("Minutos", min_value=1, max_value=1440, value=180, step=1)
-            with col_a3:
-                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-                btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
                 
+            btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
             if btn_adicionar:
                 if novo_nome.strip():
                     novo_id = f"custom_{time.time()}"
@@ -211,21 +221,19 @@ with col_center:
             with c_min:
                 novo_min_val = st.number_input("Min", min_value=1, max_value=1440, value=int(conta["minutos"]), step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
             with c_salvar:
-                st.markdown('<div class="manage-btn-col">', unsafe_allow_html=True)
+                st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
                 if st.button("💾", key=f"save_{id_c}", help="Salvar alterações", use_container_width=True):
                     conta["nome"] = novo_nome_val
                     conta["minutos"] = int(novo_min_val)
                     st.success("Salvo!")
                     st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
             with c_del:
-                st.markdown('<div class="manage-btn-col">', unsafe_allow_html=True)
+                st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
                 if st.button("🗑️", key=f"del_{id_c}", help="Deletar este cronômetro", use_container_width=True):
                     st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
                     if id_c in st.session_state.global_timers:
                         del st.session_state.global_timers[id_c]
                     st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
 
 # 7. Sistema de Áudio (JavaScript)
 if tocar_bip:
