@@ -1,6 +1,8 @@
 import streamlit as st
 import time
 from datetime import datetime, timedelta
+import pandas as pd
+import streamlit.components.v1 as components
 
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
@@ -23,7 +25,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS PROFISSIONAL COM ISOLAMENTO DE SEÇÕES
+# 3. CSS PROFISSIONAL (Mantém o visual impecável dos cards no topo)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -60,7 +62,6 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    /* Botões dos cartões no topo */
     [data-testid="stButton"] {
         margin-top: -75px !important;
         padding: 0 15% !important;
@@ -84,23 +85,6 @@ st.markdown("""
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
-    }
-
-    /* ISOLAMENTO: Reseta o estilo para qualquer botão que esteja após o marcador da seção de configuração */
-    #config-section ~ * [data-testid="stButton"],
-    #config-section ~ [data-testid="stVerticalBlock"] [data-testid="stButton"],
-    #config-section ~ [data-testid="column"] [data-testid="stButton"] {
-        margin-top: 0px !important;
-        padding: 0px !important;
-    }
-    
-    #config-section ~ * [data-testid="stButton"] button,
-    #config-section ~ [data-testid="stVerticalBlock"] [data-testid="stButton"] button,
-    #config-section ~ [data-testid="column"] [data-testid="stButton"] button {
-        background-color: #21262d !important;
-        color: #ffffff !important;
-        height: 40px !important;
-        width: 100% !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -127,7 +111,7 @@ def render_timer_grid():
         for idx, conta in enumerate(st.session_state.lista_contas):
             id_conta = conta["id"]
             nome_conta = conta["nome"]
-            minutos = conta["minutos"]
+            minutos = int(conta["minutos"])
             
             h_ciclo, m_ciclo = divmod(minutos, 60)
             label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
@@ -184,61 +168,71 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. MARCADOR DE ISOLAMENTO E PAINEL DE CONFIGURAÇÃO
+# 6. PAINEL DE CONFIGURAÇÃO EM TABELA MODERNA
 # ==========================================
-st.markdown('<div id="config-section"></div>', unsafe_allow_html=True)
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
-st.subheader("⚙️ Adicionar Novo Cronômetro")
+st.subheader("⚙️ Gerenciar Cronômetros (Adicionar, Editar e Deletar)")
+st.write("📝 **Como usar:** Edite o nome ou os minutos diretamente nas células da tabela. Para **adicionar** um novo, clique no botão **`+`** na última linha ou digite embaixo. Para **deletar**, selecione a linha desejada e clique na lixeira.")
 
-with st.form("form_adicionar", clear_on_submit=True):
-    col_add1, col_add2, col_add3 = st.columns([2, 2, 1])
-    with col_add1:
-        novo_nome = st.text_input("Nome do Personagem / Fazendeiro", placeholder="Ex: Fazendeiro MKR 12")
-    with col_add2:
-         novos_minutos = st.number_input("Duração em Minutos", min_value=1, max_value=1440, value=180, step=1)
-    with col_add3:
-        st.write("")
-        btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
-        
-    if btn_adicionar:
-        if novo_nome.strip():
-            novo_id = f"custom_{time.time()}"
-            st.session_state.lista_contas.append({
-                "id": novo_id,
-                "nome": novo_nome.strip(),
-                "minutos": int(novos_minutos)
+# Converte a lista atual em um DataFrame para a tabela interativa
+df_data = pd.DataFrame([{
+    "Nome": c["nome"],
+    "Minutos": int(c["minutos"]),
+    "_id": c["id"]
+} for c in st.session_state.lista_contas])
+
+edited_df = st.data_editor(
+    df_data[["Nome", "Minutos"]],
+    num_rows="dynamic",
+    use_container_width=True,
+    key="tabela_gerenciamento"
+)
+
+col_b1, col_b2, col_b3 = st.columns([1, 2, 1])
+with col_b2:
+    if st.button("💾 Salvar Alterações na Tabela", use_container_width=True):
+        nova_lista = []
+        for idx, row in edited_df.iterrows():
+            nome = str(row["Nome"]).strip()
+            if not nome or nome == "nan":
+                continue
+            try:
+                minutos = int(row["Minutos"])
+            except:
+                minutos = 180
+            
+            # Mantém o ID antigo se a linha já existia, ou cria um novo ID se foi adicionada agora
+            if idx < len(st.session_state.lista_contas):
+                conta_id = st.session_state.lista_contas[idx]["id"]
+            else:
+                conta_id = f"custom_{time.time()}_{idx}"
+                
+            nova_lista.append({
+                "id": conta_id,
+                "nome": nome,
+                "minutos": minutos
             })
-            st.success(f"'{novo_nome}' adicionado com sucesso!")
-            st.rerun()
-        else:
-            st.error("Digite um nome válido.")
-
-st.markdown("---")
-st.subheader("✏️ Gerenciar e Deletar Cronômetros Existentes")
-
-for idx, conta in enumerate(list(st.session_state.lista_contas)):
-    id_c = conta["id"]
-    # Colunas: [Nome] [Minutos] [Salvar] [Deletar] (Botões à direita)
-    col_e1, col_e2, col_e3, col_e4 = st.columns([3, 2, 1, 1])
-    
-    with col_e1:
-        novo_nome_val = st.text_input("Nome", value=conta["nome"], key=f"edit_nome_{id_c}", label_visibility="collapsed")
-    with col_e2:
-        novo_min_val = st.number_input("Minutos", min_value=1, max_value=1440, value=conta["minutos"], step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
-    with col_e3:
-        btn_salvar = st.button("💾 Salvar", key=f"save_{id_c}", use_container_width=True)
-    with col_e4:
-        btn_deletar = st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True)
+            
+        st.session_state.lista_contas = nova_lista
         
-    if btn_salvar:
-        conta["nome"] = novo_nome_val
-        conta["minutos"] = int(novo_min_val)
-        st.success("Atualizado!")
-        st.rerun()
+        # Remove cronômetros ativos de contas que foram deletadas
+        valid_ids = [c["id"] for c in nova_lista]
+        st.session_state.global_timers = {k: v for k, v in st.session_state.global_timers.items() if k in valid_ids}
         
-    if btn_deletar:
-        st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
-        if id_c in st.session_state.global_timers:
-            del st.session_state.global_timers[id_c]
+        st.success("Tabela salva com sucesso! Os cronômetros foram atualizados.")
         st.rerun()
+
+# 7. Sistema de Áudio (JavaScript)
+if tocar_bip:
+    uid = time.time()
+    codigo_js = f"""
+    <script>
+        var url_som = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
+        for (var i = 0; i < 4; i++) {{
+            var audio = new Audio(url_som);
+            audio.play();
+        }}
+    </script>
+    """
+    components.html(codigo_js, height=0, width=0)
