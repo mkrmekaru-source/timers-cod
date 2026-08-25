@@ -23,7 +23,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS PARA ALINHAMENTO PERFEITO
+# 3. CSS ORGANIZADO (Com escopo isolado para não afetar os botões de baixo)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -60,7 +60,8 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    [data-testid="stButton"] {
+    /* ESTILO APLICADO APENAS AOS BOTÕES DO TOPO (Dentro dos cards) */
+    .timer-btn-wrapper [data-testid="stButton"] {
         margin-top: -75px !important;
         padding: 0 15% !important;
         position: relative;
@@ -69,7 +70,7 @@ st.markdown("""
         justify-content: center;
     }
 
-    [data-testid="stButton"] button { 
+    .timer-btn-wrapper [data-testid="stButton"] button { 
         background-color: #21262d !important;
         color: white !important;
         border: 1px solid #30363d !important;
@@ -79,15 +80,10 @@ st.markdown("""
         width: 100% !important;
     }
     
-    [data-testid="stButton"] button:hover {
+    .timer-btn-wrapper [data-testid="stButton"] button:hover {
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
-    }
-
-    /* Alinha os botões de edição da tabela inferior com os inputs */
-    div[data-testid="column"] .stButton {
-        margin-top: 27px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -161,30 +157,33 @@ def render_timer_grid():
                     </div>
                 """, unsafe_allow_html=True)
                 
+                st.markdown('<div class="timer-btn-wrapper">', unsafe_allow_html=True)
                 if st.button(f"Iniciar {nome_conta}", key=f"btn_{id_conta}", use_container_width=True):
                     st.session_state.global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
                     st.session_state.beep_played[id_conta] = False
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("Nenhum cronômetro cadastrado. Adicione um abaixo!")
 
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Botões à Esquerda)
+# 6. PAINEL DE CONFIGURAÇÃO (Alinhado à Esquerda)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
 st.subheader("⚙️ Adicionar Novo Cronômetro")
 
 with st.form("form_adicionar", clear_on_submit=True):
-    col_add3, col_add1, col_add2 = st.columns([1, 2, 2])
-    with col_add3:
-        btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
+    col_add1, col_add2, col_add3 = st.columns([2, 2, 1])
     with col_add1:
-        novo_nome = st.text_input("Nome do Personagem / Fazendeiro", placeholder="Ex: Fazendeiro MKR 12", label_visibility="collapsed")
+        novo_nome = st.text_input("Nome do Personagem / Fazendeiro", placeholder="Ex: Fazendeiro MKR 12")
     with col_add2:
-         novos_minutos = st.number_input("Duração em Minutos", min_value=1, max_value=1440, value=180, step=1, label_visibility="collapsed")
+         novos_minutos = st.number_input("Duração em Minutos", min_value=1, max_value=1440, value=180, step=1)
+    with col_add3:
+        st.write("")
+        btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
         
     if btn_adicionar:
         if novo_nome.strip():
@@ -204,16 +203,16 @@ st.subheader("✏️ Gerenciar e Deletar Cronômetros Existentes")
 
 for idx, conta in enumerate(list(st.session_state.lista_contas)):
     id_c = conta["id"]
-    # Colocando os botões de Salvar e Deletar no lado esquerdo ([1, 1, 3, 2])
-    col_e3, col_e4, col_e1, col_e2 = st.columns([1, 1, 3, 2])
+    # Ordem exata nas colunas: [Salvar] [Deletar] [Nome] [Minutos]
+    col_e1, col_e2, col_e3, col_e4 = st.columns([1, 1, 3, 2])
     
-    with col_e3:
-        btn_salvar = st.button("💾 Salvar", key=f"save_{id_c}", use_container_width=True)
-    with col_e4:
-        btn_deletar = st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True)
     with col_e1:
-        novo_nome_val = st.text_input("Nome", value=conta["nome"], key=f"edit_nome_{id_c}", label_visibility="collapsed")
+        btn_salvar = st.button("💾 Salvar", key=f"save_{id_c}", use_container_width=True)
     with col_e2:
+        btn_deletar = st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True)
+    with col_e3:
+        novo_nome_val = st.text_input("Nome", value=conta["nome"], key=f"edit_nome_{id_c}", label_visibility="collapsed")
+    with col_e4:
         novo_min_val = st.number_input("Minutos", min_value=1, max_value=1440, value=conta["minutos"], step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
         
     if btn_salvar:
