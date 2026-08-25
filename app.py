@@ -1,19 +1,14 @@
 import streamlit as st
 import time
 from datetime import datetime, timedelta
-import streamlit.components.v1 as components
 
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. CACHE PERSISTENTE APENAS PARA OS TIMERS
-@st.cache_resource
-def get_global_timers():
-    return {}
+# 2. ESTADO GLOBAL NA SESSÃO
+if "global_timers" not in st.session_state:
+    st.session_state.global_timers = {}
 
-global_timers = get_global_timers()
-
-# 3. LISTA DE CONTAS NA SESSÃO (Garante velocidade e estabilidade)
 if "lista_contas" not in st.session_state:
     contas_iniciais = []
     for i in range(2, 12):
@@ -28,7 +23,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 4. CSS IDÊNTICO À SEGUNDA IMAGEM (Layout limpo, elegante e profissional)
+# 3. CSS IDÊNTICO À SEGUNDA IMAGEM (Layout profissional)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -38,7 +33,6 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 3rem; }
     
-    /* Card no estilo original da segunda imagem */
     .timer-card {
         background-color: #161b22;
         padding: 20px 15px 85px 15px;
@@ -66,7 +60,6 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    /* Posicionamento perfeito do botão Iniciar dentro do card */
     [data-testid="stButton"] {
         margin-top: -75px !important;
         padding: 0 15% !important;
@@ -96,7 +89,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 5. Logo e Cabeçalho
+# 4. Logo e Cabeçalho
 col_l, col_m, col_r = st.columns([1, 2, 1])
 with col_m:
     st.image("1679019533_0X730X6C0X6F0X67.png", use_container_width=True)
@@ -108,69 +101,72 @@ if 'beep_played' not in st.session_state:
 
 tocar_bip = False
 
-# 6. Layout Dinâmico em 5 colunas para os Timers Atuais
-if len(st.session_state.lista_contas) > 0:
-    cols = st.columns(5)
-    for idx, conta in enumerate(st.session_state.lista_contas):
-        id_conta = conta["id"]
-        nome_conta = conta["nome"]
-        minutos = conta["minutos"]
-        
-        h_ciclo, m_ciclo = divmod(minutos, 60)
-        label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
-        
-        with cols[idx % 5]:
-            texto_timer = "00:00:00"
-            texto_termino = "Termina às: --:--" 
-            cor_timer = "#484f58"
-            card_class = "timer-card"
+# 5. FRAGMENTO DOS TIMERS (Atualiza sozinho a cada 1s sem travar o resto da página)
+@st.fragment(run_every=1)
+def render_timer_grid():
+    if len(st.session_state.lista_contas) > 0:
+        cols = st.columns(5)
+        for idx, conta in enumerate(st.session_state.lista_contas):
+            id_conta = conta["id"]
+            nome_conta = conta["nome"]
+            minutos = conta["minutos"]
             
-            if id_conta in global_timers:
-                tempo_fim = global_timers[id_conta]
-                restante = tempo_fim - agora_br()
-                segundos_restantes = restante.total_seconds()
+            h_ciclo, m_ciclo = divmod(minutos, 60)
+            label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
+            
+            with cols[idx % 5]:
+                texto_timer = "00:00:00"
+                texto_termino = "Termina às: --:--" 
+                cor_timer = "#484f58"
+                card_class = "timer-card"
                 
-                duracao_seg = minutos * 60
-                if segundos_restantes > 0:
-                    h, r = divmod(int(segundos_restantes), 3600)
-                    m, s = divmod(r, 60)
-                    texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
-                    texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
+                if id_conta in st.session_state.global_timers:
+                    tempo_fim = st.session_state.global_timers[id_conta]
+                    restante = tempo_fim - agora_br()
+                    segundos_restantes = restante.total_seconds()
                     
-                    if segundos_restantes > (duracao_seg / 2):
-                        cor_timer = "#58a6ff" # Azul
-                    elif segundos_restantes > 3600:
-                        cor_timer = "#ffa500" # Laranja
+                    duracao_seg = minutos * 60
+                    if segundos_restantes > 0:
+                        h, r = divmod(int(segundos_restantes), 3600)
+                        m, s = divmod(r, 60)
+                        texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
+                        texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
+                        
+                        if segundos_restantes > (duracao_seg / 2):
+                            cor_timer = "#58a6ff" # Azul
+                        elif segundos_restantes > 3600:
+                            cor_timer = "#ffa500" # Laranja
+                        else:
+                            cor_timer = "#ff4b4b" # Vermelho
                     else:
-                        cor_timer = "#ff4b4b" # Vermelho
-                else:
-                    texto_timer = "PRONTO!"
-                    texto_termino = "Termina às: AGORA"
-                    cor_timer = "#3fb950" # Verde
-                    card_class = "timer-card timer-ready" 
-                    
-                    if not st.session_state.beep_played.get(id_conta, False):
-                        tocar_bip = True
-                        st.session_state.beep_played[id_conta] = True
-            
-            st.markdown(f"""
-                <div class="{card_class}">
-                    <div class="account-label">{nome_conta}</div>
-                    <div class="cycle-label">Ciclo: {label_ciclo}</div>
-                    <div class="end-time-label">{texto_termino}</div>
-                    <div class="timer-text" style="color: {cor_timer};">{texto_timer}</div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            if st.button(f"Iniciar {nome_conta}", key=f"btn_{id_conta}", use_container_width=True):
-                global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
-                st.session_state.beep_played[id_conta] = False
-                st.rerun()
-else:
-    st.info("Nenhum cronômetro cadastrado. Adicione um abaixo!")
+                        texto_timer = "PRONTO!"
+                        texto_termino = "Termina às: AGORA"
+                        cor_timer = "#3fb950" # Verde
+                        card_class = "timer-card timer-ready" 
+                        
+                        if not st.session_state.beep_played.get(id_conta, False):
+                            st.session_state.beep_played[id_conta] = True
+                
+                st.markdown(f"""
+                    <div class="{card_class}">
+                        <div class="account-label">{nome_conta}</div>
+                        <div class="cycle-label">Ciclo: {label_ciclo}</div>
+                        <div class="end-time-label">{texto_termino}</div>
+                        <div class="timer-text" style="color: {cor_timer};">{texto_timer}</div>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button(f"Iniciar {nome_conta}", key=f"btn_{id_conta}", use_container_width=True):
+                    st.session_state.global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
+                    st.session_state.beep_played[id_conta] = False
+                    st.rerun()
+    else:
+        st.info("Nenhum cronômetro cadastrado. Adicione um abaixo!")
+
+render_timer_grid()
 
 # ==========================================
-# 7. PAINEL DE CONFIGURAÇÃO NA PARTE DE BAIXO
+# 6. PAINEL DE CONFIGURAÇÃO (Totalmente estável e funcional)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -220,24 +216,6 @@ for idx, conta in enumerate(list(st.session_state.lista_contas)):
     with col_e4:
         if st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True):
             st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
-            if id_c in global_timers:
-                del global_timers[id_c]
+            if id_c in st.session_state.global_timers:
+                del st.session_state.global_timers[id_c]
             st.rerun()
-
-# 8. Sistema de Áudio (JavaScript)
-if tocar_bip:
-    uid = time.time()
-    codigo_js = f"""
-    <script>
-        var url_som = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
-        for (var i = 0; i < 4; i++) {{
-            var audio = new Audio(url_som);
-            audio.play();
-        }}
-    </script>
-    """
-    components.html(codigo_js, height=0, width=0)
-
-# 9. Refresh
-time.sleep(1)
-st.rerun()
