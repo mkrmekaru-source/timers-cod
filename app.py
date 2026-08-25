@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO E ROBUSTO (Tema escuro universal para todos os botões)
+# 3. CSS COM ALINHAMENTO MILIMÉTRICO E TEMA ESCURO UNIVERSAL
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -87,6 +87,11 @@ st.markdown("""
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
+    }
+
+    /* Alinhamento exato para compensar o espaço do label dos inputs */
+    .action-btn {
+        margin-top: 28px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -172,7 +177,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado com textos Salvar e Deletar)
+# 6. PAINEL DE CONFIGURAÇÃO (Alinhado Milimetricamente)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -213,7 +218,6 @@ with col_center:
         for idx, conta in enumerate(list(st.session_state.lista_contas)):
             id_c = conta["id"]
             
-            # Proporção balanceada para Nome, Minutos, Salvar e Deletar com texto
             c_nome, c_min, c_salvar, c_del = st.columns([2.5, 1.5, 1, 1])
             
             with c_nome:
@@ -221,19 +225,21 @@ with col_center:
             with c_min:
                 novo_min_val = st.number_input("Min", min_value=1, max_value=1440, value=int(conta["minutos"]), step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
             with c_salvar:
-                st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
+                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
                 if st.button("Salvar", key=f"save_{id_c}", use_container_width=True):
                     conta["nome"] = novo_nome_val
                     conta["minutos"] = int(novo_min_val)
                     st.success("Salvo!")
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
             with c_del:
-                st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
+                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
                 if st.button("Deletar", key=f"del_{id_c}", use_container_width=True):
                     st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
                     if id_c in st.session_state.global_timers:
                         del st.session_state.global_timers[id_c]
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
 
 # 7. Sistema de Áudio (JavaScript)
 if tocar_bip:
