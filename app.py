@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COM CORES E TEMA ESCURO PADRONIZADOS
+# 3. CSS COMPLETO COM ALINHAMENTO FLEXBOX PERFEITO PARA OS BOTÕES
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -34,7 +34,7 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 3rem; }
     
-    /* Padroniza os cartões dos cronômetros com o fundo escuro perfeito (#161b22) */
+    /* Padroniza os cartões dos cronômetros no topo */
     div[data-testid="column"] div[data-testid="stContainer"] {
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
@@ -66,9 +66,9 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    /* Alinhamento milimétrico para os botões Salvar / Deletar */
-    .sync-btn {
-        margin-top: 24px !important;
+    /* Alinhamento perfeito dos botões de Salvar/Deletar via Flexbox (sem espaçadores manuais) */
+    .row-widget.stHorizontal {
+        align-items: flex-end !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -87,7 +87,7 @@ if 'beep_played' not in st.session_state:
 
 tocar_bip = False
 
-# 5. FRAGMENTO DOS TIMERS (Com cores dinâmicas para cada estado)
+# 5. FRAGMENTO DOS TIMERS
 @st.fragment(run_every=1)
 def render_timer_grid():
     if len(st.session_state.lista_contas) > 0:
@@ -118,23 +118,21 @@ def render_timer_grid():
                         texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
                         texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
                         
-                        # Cores dinâmicas baseadas no progresso
                         if segundos_restantes > (duracao_seg / 2):
-                            cor_timer = "#58a6ff" # Azul (Mais de 50%)
+                            cor_timer = "#58a6ff" 
                         elif segundos_restantes > 3600:
-                            cor_timer = "#ffa500" # Laranja (Menos de 50%)
+                            cor_timer = "#ffa500" 
                         else:
-                            cor_timer = "#ff4b4b" # Vermelho (Menos de 1 hora)
+                            cor_timer = "#ff4b4b" 
                     else:
                         texto_timer = "PRONTO!"
                         texto_termino = "Termina às: AGORA"
-                        cor_timer = "#3fb950" # Verde
+                        cor_timer = "#3fb950" 
                         is_ready = True
                         
                         if not st.session_state.beep_played.get(id_conta, False):
                             st.session_state.beep_played[id_conta] = True
                 
-                # Renderiza o container com classe condicional se estiver pronto
                 container_class = "container-ready" if is_ready else ""
                 with st.container(border=True):
                     st.markdown(f"""
@@ -156,7 +154,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado e Simétrico)
+# 6. PAINEL DE CONFIGURAÇÃO (Alinhado Milimetricamente)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -204,21 +202,17 @@ with col_center:
             with c_min:
                 novo_min_val = st.number_input("Min", min_value=1, max_value=1440, value=int(conta["minutos"]), step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
             with c_salvar:
-                st.markdown('<div class="sync-btn">', unsafe_allow_html=True)
                 if st.button("Salvar", key=f"save_{id_c}", use_container_width=True):
                     conta["nome"] = novo_nome_val
                     conta["minutos"] = int(novo_min_val)
                     st.success("Salvo!")
                     st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
             with c_del:
-                st.markdown('<div class="sync-btn">', unsafe_allow_html=True)
                 if st.button("Deletar", key=f"del_{id_c}", use_container_width=True):
                     st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
                     if id_c in st.session_state.global_timers:
                         del st.session_state.global_timers[id_c]
                     st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
 
 # 7. Sistema de Áudio (JavaScript)
 if tocar_bip:
