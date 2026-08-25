@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS PROFISSIONAL ESCURO (Totalmente integrado)
+# 3. CSS CORRIGIDO (Mantém os cartões perfeitos e os botões alinhados)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -61,7 +61,17 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    [data-testid="stButton"] > button { 
+    /* Encaixa o botão Iniciar perfeitamente dentro do card no topo */
+    [data-testid="stButton"] {
+        margin-top: -75px !important;
+        padding: 0 15% !important;
+        position: relative;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+    }
+
+    [data-testid="stButton"] button { 
         background-color: #21262d !important;
         color: white !important;
         border: 1px solid #30363d !important;
@@ -71,21 +81,10 @@ st.markdown("""
         width: 100% !important;
     }
     
-    [data-testid="stButton"] > button:hover {
+    [data-testid="stButton"] button:hover {
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
-    }
-
-    /* Botão de deletar nas linhas de edição */
-    div[data-testid="column"] button[kind="secondary"] {
-        background-color: #21262d !important;
-        border: 1px solid #30363d !important;
-        color: #ff4b4b !important;
-    }
-    div[data-testid="column"] button[kind="secondary"]:hover {
-        background-color: rgba(255, 75, 75, 0.15) !important;
-        border-color: #ff4b4b !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -169,7 +168,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Centralizado, Escuro e Intuitivo)
+# 6. PAINEL DE CONFIGURAÇÃO (Centralizado e Compacto)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -179,26 +178,27 @@ col_l, col_center, col_r = st.columns([1, 2.2, 1])
 with col_center:
     st.subheader("⚙️ Adicionar Novo Cronômetro")
     
-    with st.form("form_adicionar", clear_on_submit=True):
-        col_a1, col_a2 = st.columns([2, 1])
-        with col_a1:
-            novo_nome = st.text_input("Nome do Fazendeiro", placeholder="Ex: MKR 12")
-        with col_a2:
-            novos_minutos = st.number_input("Minutos", min_value=1, max_value=1440, value=180, step=1)
-            
-        btn_adicionar = st.form_submit_button("➕ Adicionar Novo Cronômetro", use_container_width=True)
-        if btn_adicionar:
-            if novo_nome.strip():
-                novo_id = f"custom_{time.time()}"
-                st.session_state.lista_contas.append({
-                    "id": novo_id,
-                    "nome": novo_nome.strip(),
-                    "minutos": int(novos_minutos)
-                })
-                st.success(f"'{novo_nome}' adicionado!")
-                st.rerun()
-            else:
-                st.error("Digite um nome válido.")
+    with st.container(border=True):
+        with st.form("form_adicionar", clear_on_submit=True):
+            col_a1, col_a2 = st.columns([2, 1])
+            with col_a1:
+                novo_nome = st.text_input("Nome do Fazendeiro", placeholder="Ex: MKR 12")
+            with col_a2:
+                novos_minutos = st.number_input("Minutos", min_value=1, max_value=1440, value=180, step=1)
+                
+            btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=False)
+            if btn_adicionar:
+                if novo_nome.strip():
+                    novo_id = f"custom_{time.time()}"
+                    st.session_state.lista_contas.append({
+                        "id": novo_id,
+                        "nome": novo_nome.strip(),
+                        "minutos": int(novos_minutos)
+                    })
+                    st.success(f"'{novo_nome}' adicionado!")
+                    st.rerun()
+                else:
+                    st.error("Digite um nome válido.")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("✏️ Gerenciar / Deletar Existentes")
