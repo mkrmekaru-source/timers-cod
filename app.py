@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS CORRIGIDO (Mantém os cartões perfeitos e os botões alinhados)
+# 3. CSS COM ESCOPO ISOLADO (Garante que o estilo dos botões só afeta os cards do topo)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -61,8 +61,8 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    /* Encaixa o botão Iniciar perfeitamente dentro do card no topo */
-    [data-testid="stButton"] {
+    /* ESTILO ISOLADO APENAS PARA OS BOTÕES DOS CARDS NO TOPO */
+    .timer-card-container [data-testid="stButton"] {
         margin-top: -75px !important;
         padding: 0 15% !important;
         position: relative;
@@ -71,7 +71,7 @@ st.markdown("""
         justify-content: center;
     }
 
-    [data-testid="stButton"] button { 
+    .timer-card-container [data-testid="stButton"] button { 
         background-color: #21262d !important;
         color: white !important;
         border: 1px solid #30363d !important;
@@ -81,10 +81,21 @@ st.markdown("""
         width: 100% !important;
     }
     
-    [data-testid="stButton"] button:hover {
+    .timer-card-container [data-testid="stButton"] button:hover {
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
+    }
+
+    /* Estilo para os botões de ação na seção inferior */
+    div[data-testid="column"] button[kind="secondary"] {
+        background-color: #21262d !important;
+        border: 1px solid #30363d !important;
+        color: #ffffff !important;
+    }
+    div[data-testid="column"] button[kind="secondary"]:hover {
+        border-color: #58a6ff !important;
+        color: #58a6ff !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -158,17 +169,19 @@ def render_timer_grid():
                     </div>
                 """, unsafe_allow_html=True)
                 
+                st.markdown('<div class="timer-card-container">', unsafe_allow_html=True)
                 if st.button(f"Iniciar {nome_conta}", key=f"btn_{id_conta}", use_container_width=True):
                     st.session_state.global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
                     st.session_state.beep_played[id_conta] = False
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("Nenhum cronômetro cadastrado. Adicione um abaixo!")
 
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Centralizado e Compacto)
+# 6. PAINEL DE CONFIGURAÇÃO (Centralizado, Escuro e Alinhado)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -186,7 +199,7 @@ with col_center:
             with col_a2:
                 novos_minutos = st.number_input("Minutos", min_value=1, max_value=1440, value=180, step=1)
                 
-            btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=False)
+            btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
             if btn_adicionar:
                 if novo_nome.strip():
                     novo_id = f"custom_{time.time()}"
