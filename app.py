@@ -6,9 +6,15 @@ import streamlit.components.v1 as components
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. CACHE PERSISTENTE V10
+# 2. CACHE PERSISTENTE APENAS PARA OS TIMERS
 @st.cache_resource
-def get_global_data_v10():
+def get_global_timers():
+    return {}
+
+global_timers = get_global_timers()
+
+# 3. LISTA DE CONTAS NA SESSÃO (Garante velocidade e evita travamentos ao deletar)
+if "lista_contas" not in st.session_state:
     contas_iniciais = []
     for i in range(2, 12):
         contas_iniciais.append({
@@ -16,20 +22,13 @@ def get_global_data_v10():
             "nome": f"Fazendeiro MKR {i}",
             "minutos": 180
         })
-    return {
-        "timers": {},
-        "contas": contas_iniciais
-    }
+    st.session_state.lista_contas = contas_iniciais
 
-dados_globais = get_global_data_v10()
-global_timers = dados_globais.setdefault("timers", {})
-lista_contas = dados_globais.setdefault("contas", [])
-
-# 3. Função de Tempo (Horário de Brasília)
+# Função de Tempo (Horário de Brasília)
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 4. CSS Customizado (Botão visível e lixeira vermelha)
+# 4. CSS Customizado
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -39,7 +38,6 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 2rem; }
     
-    /* Botão Iniciar sempre visível, com visual escuro profissional */
     .stButton > button { 
         background-color: #21262d !important;
         color: #ffffff !important;
@@ -56,7 +54,7 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    /* Botão da lixeira menor e vermelho */
+    /* Botão da lixeira menor, vermelho e alinhado */
     div[data-testid="column"] button[kind="secondary"] {
         background-color: transparent !important;
         border: none !important;
@@ -90,9 +88,9 @@ if 'beep_played' not in st.session_state:
 tocar_bip = False
 
 # 6. Layout Dinâmico em 5 colunas para os Timers Atuais
-if len(lista_contas) > 0:
+if len(st.session_state.lista_contas) > 0:
     cols = st.columns(5)
-    for idx, conta in enumerate(lista_contas):
+    for idx, conta in enumerate(st.session_state.lista_contas):
         id_conta = conta["id"]
         nome_conta = conta["nome"]
         minutos = conta["minutos"]
@@ -107,7 +105,7 @@ if len(lista_contas) > 0:
                     st.markdown(f"**{nome_conta}**")
                 with c_del:
                     if st.button("🗑️", key=f"card_del_{id_conta}", help="Deletar este cronômetro"):
-                        lista_contas.remove(conta)
+                        st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_conta]
                         if id_conta in global_timers:
                             del global_timers[id_conta]
                         st.rerun()
@@ -176,7 +174,7 @@ with st.form("form_adicionar", clear_on_submit=True):
     if btn_adicionar:
         if novo_nome.strip():
             novo_id = f"custom_{time.time()}"
-            lista_contas.append({
+            st.session_state.lista_contas.append({
                 "id": novo_id,
                 "nome": novo_nome.strip(),
                 "minutos": int(novos_minutos)
@@ -189,7 +187,7 @@ with st.form("form_adicionar", clear_on_submit=True):
 st.markdown("---")
 st.subheader("✏️ Editar Cronômetros Existentes")
 
-for idx, conta in enumerate(list(lista_contas)):
+for idx, conta in enumerate(list(st.session_state.lista_contas)):
     id_c = conta["id"]
     col_e1, col_e2, col_e3, col_e4 = st.columns([3, 2, 1, 1])
     
@@ -205,7 +203,7 @@ for idx, conta in enumerate(list(lista_contas)):
             st.rerun()
     with col_e4:
         if st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True):
-            lista_contas.remove(conta)
+            st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
             if id_c in global_timers:
                 del global_timers[id_c]
             st.warning("Removido.")
