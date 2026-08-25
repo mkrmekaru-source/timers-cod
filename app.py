@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS "FORA DA CAIXA" (Alinhamento milimétrico e encaixe perfeito dos botões)
+# 3. CSS COM AJUSTE FINO DE ALINHAMENTO MILIMÉTRICO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -37,7 +37,7 @@ st.markdown("""
     /* Cartões do Topo */
     .timer-card {
         background-color: #161b22;
-        padding: 20px 15px 75px 15px;
+        padding: 20px 15px 70px 15px;
         border-radius: 12px;
         border: 1px solid #30363d;
         text-align: center;
@@ -62,11 +62,11 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    /* Puxa o botão para dentro da base do cartão de forma limpa */
+    /* Encaixe perfeito do botão Iniciar dentro do cartão */
     .tucked-btn {
-        margin-top: -55px !important;
-        margin-bottom: 20px !important;
-        padding: 0 12% !important;
+        margin-top: -50px !important;
+        margin-bottom: 15px !important;
+        padding: 0 10% !important;
         position: relative;
         z-index: 10;
         display: flex;
@@ -90,9 +90,9 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    /* Sincroniza a altura dos botões de Salvar/Deletar com os inputs (compensa o label fantasma) */
+    /* Alinhamento exato na mesma linha horizontal das caixas de texto */
     .sync-btn {
-        margin-top: 28px !important;
+        margin-top: 5px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -178,7 +178,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado e Simétrico)
+# 6. PAINEL DE CONFIGURAÇÃO (Alinhado Perfeitamente)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
