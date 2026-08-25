@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM TEMA ESCURO PROFUNDO EM TODOS OS CAMPOS E INPUTS
+# 3. CSS COM REMOÇÃO DE BORDAS CLARAS E TEXTOS BRANCOS NOS INPUTS
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -49,11 +49,22 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
     }
     
-    /* ESCURECER TOTALMENTE INPUTS, NUMBER INPUTS E WRAPPERS */
-    div[data-baseweb="base-input"], div[data-baseweb="input"], div[data-baseweb="spinbutton"], input {
+    /* ESCURECER FUNDO E BORDAS DOS INPUTS E DEIXAR TEXTO BRANCO */
+    div[data-baseweb="base-input"], div[data-baseweb="input"], div[data-baseweb="spinbutton"] {
+        background-color: #21262d !important;
+        border-color: #30363d !important;
+    }
+    
+    input, textarea {
         background-color: #21262d !important;
         color: #ffffff !important;
-        border-color: #30363d !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    
+    /* Remove o foco com borda clara do Streamlit nos inputs */
+    div[data-baseweb="base-input"]:focus-within, div[data-baseweb="input"]:focus-within {
+        border-color: #58a6ff !important;
+        box-shadow: 0 0 0 1px #58a6ff !important;
     }
     
     /* Container específico do number_input e seus botões + / - */
@@ -77,10 +88,6 @@ st.markdown("""
         background-color: #30363d !important;
         color: #58a6ff !important;
         border-color: #58a6ff !important;
-    }
-    
-    input {
-        color: #ffffff !important;
     }
     
     /* PADRONIZAÇÃO DE TODOS OS BOTÕES NO TEMA ESCURO */
@@ -187,7 +194,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado e Simétrico)
+# 6. PAINEL DE CONFIGURAÇÃO (Alinhado e Escuro)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
