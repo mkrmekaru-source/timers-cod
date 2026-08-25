@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COM REMOÇÃO DE BORDAS CLARAS E TEXTOS BRANCOS NOS INPUTS
+# 3. CSS COMPLETO COM BORDAS ESCURECIDAS NOS INPUTS DE TEXTO E NÚMERO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -49,10 +49,14 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
     }
     
-    /* ESCURECER FUNDO E BORDAS DOS INPUTS E DEIXAR TEXTO BRANCO */
-    div[data-baseweb="base-input"], div[data-baseweb="input"], div[data-baseweb="spinbutton"] {
+    /* ESCURECER FUNDO E BORDAS DE TODOS OS INPUTS (TEXTO E NÚMERO) */
+    div[data-testid="stTextInput"] div[data-baseweb="base-input"],
+    div[data-testid="stNumberInput"] div[data-baseweb="base-input"],
+    div[data-baseweb="input"],
+    div[data-baseweb="base-input"],
+    div[data-baseweb="spinbutton"] {
         background-color: #21262d !important;
-        border-color: #30363d !important;
+        border: 1px solid #30363d !important;
     }
     
     input, textarea {
@@ -61,21 +65,11 @@ st.markdown("""
         -webkit-text-fill-color: #ffffff !important;
     }
     
-    /* Remove o foco com borda clara do Streamlit nos inputs */
-    div[data-baseweb="base-input"]:focus-within, div[data-baseweb="input"]:focus-within {
+    /* Foco sutil em azul ao clicar no input */
+    div[data-baseweb="base-input"]:focus-within, 
+    div[data-baseweb="input"]:focus-within {
         border-color: #58a6ff !important;
         box-shadow: 0 0 0 1px #58a6ff !important;
-    }
-    
-    /* Container específico do number_input e seus botões + / - */
-    div.stNumberInput > div > div {
-        background-color: #21262d !important;
-        border-color: #30363d !important;
-    }
-    
-    div.stNumberInput input {
-        background-color: #21262d !important;
-        color: #ffffff !important;
     }
     
     /* Botões de incremento/decremento do number_input (+ e -) */
