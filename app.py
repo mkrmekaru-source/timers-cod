@@ -6,9 +6,9 @@ import streamlit.components.v1 as components
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. CACHE PERSISTENTE V8
+# 2. CACHE PERSISTENTE V9 (Estrutura limpa e organizada)
 @st.cache_resource
-def get_global_data_v8():
+def get_global_data_v9():
     contas_iniciais = []
     for i in range(2, 12):
         contas_iniciais.append({
@@ -21,7 +21,7 @@ def get_global_data_v8():
         "contas": contas_iniciais
     }
 
-dados_globais = get_global_data_v8()
+dados_globais = get_global_data_v9()
 global_timers = dados_globais.setdefault("timers", {})
 lista_contas = dados_globais.setdefault("contas", [])
 
@@ -29,7 +29,7 @@ lista_contas = dados_globais.setdefault("contas", [])
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 4. CSS Ajustado (Estilo compacto para o botão de deletar no card)
+# 4. CSS Customizado para ajustar detalhes visuais e deixar a lixeira compacta
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -39,52 +39,7 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 2rem; }
     
-    .timer-card {
-        background-color: #161b22;
-        padding: 20px 15px 85px 15px;
-        border-radius: 12px;
-        border: 1px solid #30363d;
-        text-align: center;
-        transition: 0.3s;
-        margin-bottom: 20px;
-        position: relative;
-    }
-    
-    .timer-ready {
-        border: 2px solid #3fb950 !important;
-        box-shadow: 0 0 15px rgba(63, 185, 80, 0.3);
-        background-color: rgba(63, 185, 80, 0.05) !important;
-    }
-    
-    .account-label { font-size: 18px; font-weight: bold; color: #8b949e; margin-bottom: 2px; }
-    .cycle-label { font-size: 14px; color: #8b949e; margin-bottom: 2px; }
-    .end-time-label { font-size: 13px; color: #58a6ff; margin-bottom: 8px; font-style: italic; }
-    
-    .timer-text { 
-        font-size: 54px; 
-        font-weight: bold; 
-        margin: 10px 0; 
-        font-family: 'Courier New', Courier, monospace; 
-    }
-    
-    /* Botão Principal de Iniciar */
-    [data-testid="stButton"] > button { 
-        background-color: #21262d !important;
-        color: white !important;
-        border: 1px solid #30363d !important;
-        border-radius: 8px !important;
-        height: 40px !important;
-        font-size: 14px !important;
-        width: 100% !important;
-    }
-    
-    [data-testid="stButton"] > button:hover {
-        border-color: #58a6ff !important;
-        color: #58a6ff !important;
-        background-color: #30363d !important;
-    }
-
-    /* Estilo Compacto para o Botão de Deletar no Card */
+    /* Estilo sutil para o botão de deletar dentro do card */
     div[data-testid="column"] button[kind="secondary"] {
         background-color: transparent !important;
         border: none !important;
@@ -102,7 +57,7 @@ st.markdown("""
         border-radius: 4px !important;
     }
 
-    .logo-spacer { margin-bottom: 40px; }
+    .logo-spacer { margin-bottom: 30px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -130,66 +85,62 @@ if len(lista_contas) > 0:
         label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
         
         with cols[idx % 5]:
-            # Container interno alinhado para o título e a lixeira vermelha menor
-            c_tit, c_del = st.columns([5, 1])
-            with c_tit:
-                st.markdown(f'<div class="account-label">{nome_conta}</div>', unsafe_allow_html=True)
-            with c_del:
-                if st.button("🗑️", key=f"card_del_{id_conta}", help="Deletar este cronômetro"):
-                    lista_contas.remove(conta)
-                    if id_conta in global_timers:
-                        del global_timers[id_conta]
-                    st.rerun()
-            
-            st.markdown(f'<div class="cycle-label">Ciclo: {label_ciclo}</div>', unsafe_allow_html=True)
-            
-            texto_timer = "00:00:00"
-            texto_termino = "Termina às: --:--" 
-            cor_timer = "#484f58"
-            card_class = "timer-card"
-            
-            if id_conta in global_timers:
-                tempo_fim = global_timers[id_conta]
-                restante = tempo_fim - agora_br()
-                segundos_restantes = restante.total_seconds()
+            # Usando container nativo com borda para manter tudo perfeitamente alinhado na caixa
+            with st.container(border=True):
+                # Cabeçalho do Card: Nome e Lixeira vermelha compacta
+                c_tit, c_del = st.columns([5, 1])
+                with c_tit:
+                    st.markdown(f"**{nome_conta}**")
+                with c_del:
+                    if st.button("🗑️", key=f"card_del_{id_conta}", help="Deletar este cronômetro"):
+                        lista_contas.remove(conta)
+                        if id_conta in global_timers:
+                            del global_timers[id_conta]
+                        st.rerun()
                 
-                duracao_seg = minutos * 60
-                if segundos_restantes > 0:
-                    h, r = divmod(int(segundos_restantes), 3600)
-                    m, s = divmod(r, 60)
-                    texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
-                    texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
+                st.markdown(f"<div style='font-size: 13px; color: #8b949e;'>Ciclo: {label_ciclo}</div>", unsafe_allow_html=True)
+                
+                texto_timer = "00:00:00"
+                texto_termino = "Termina às: --:--" 
+                cor_timer = "#484f58"
+                
+                if id_conta in global_timers:
+                    tempo_fim = global_timers[id_conta]
+                    restante = tempo_fim - agora_br()
+                    segundos_restantes = restante.total_seconds()
                     
-                    if segundos_restantes > (duracao_seg / 2):
-                        cor_timer = "#58a6ff" 
-                    elif segundos_restantes > 3600:
-                        cor_timer = "#ffa500" 
+                    duracao_seg = minutos * 60
+                    if segundos_restantes > 0:
+                        h, r = divmod(int(segundos_restantes), 3600)
+                        m, s = divmod(r, 60)
+                        texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
+                        texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
+                        
+                        if segundos_restantes > (duracao_seg / 2):
+                            cor_timer = "#58a6ff" # Azul
+                        elif segundos_restantes > 3600:
+                            cor_timer = "#ffa500" # Laranja
+                        else:
+                            cor_timer = "#ff4b4b" # Vermelho
                     else:
-                        cor_timer = "#ff4b4b" 
-                else:
-                    texto_timer = "PRONTO!"
-                    texto_termino = "Termina às: AGORA"
-                    cor_timer = "#3fb950" 
-                    card_class = "timer-card timer-ready" 
-                    
-                    if not st.session_state.beep_played.get(id_conta, False):
-                        tocar_bip = True
-                        st.session_state.beep_played[id_conta] = True
-            
-            st.markdown(f"""
-                <div class="{card_class}" style="margin-top: -10px;">
-                    <div class="end-time-label">{texto_termino}</div>
-                    <div class="timer-text" style="color: {cor_timer};">{texto_timer}</div>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            # Botão Iniciar com espaçamento correto alinhado ao card
-            st.markdown('<div style="margin-top: -65px; position: relative; z-index: 10;">', unsafe_allow_html=True)
-            if st.button(f"Iniciar", key=f"btn_{id_conta}", use_container_width=True):
-                global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
-                st.session_state.beep_played[id_conta] = False
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+                        texto_timer = "PRONTO!"
+                        texto_termino = "Termina às: AGORA"
+                        cor_timer = "#3fb950" # Verde
+                        
+                        if not st.session_state.beep_played.get(id_conta, False):
+                            tocar_bip = True
+                            st.session_state.beep_played[id_conta] = True
+                
+                st.markdown(f"<div style='font-size: 13px; color: #58a6ff; font-style: italic; margin-bottom: 5px;'>{texto_termino}</div>", unsafe_allow_html=True)
+                
+                # Cronômetro Grande Centralizado
+                st.markdown(f"<div style='font-size: 42px; font-weight: bold; font-family: monospace; text-align: center; color: {cor_timer}; margin: 10px 0;'>{texto_timer}</div>", unsafe_allow_html=True)
+                
+                # Botão Iniciar dentro do card
+                if st.button(f"Iniciar", key=f"btn_{id_conta}", use_container_width=True):
+                    global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
+                    st.session_state.beep_played[id_conta] = False
+                    st.rerun()
 else:
     st.info("Nenhum cronômetro cadastrado. Adicione um abaixo!")
 
