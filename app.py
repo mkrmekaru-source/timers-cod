@@ -1,7 +1,6 @@
 import streamlit as st
 import time
 from datetime import datetime, timedelta
-import pandas as pd
 import streamlit.components.v1 as components
 
 # 1. Configuração da Página
@@ -25,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS PROFISSIONAL
+# 3. CSS PROFISSIONAL ESCURO (Totalmente integrado)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -62,16 +61,7 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    [data-testid="stButton"] {
-        margin-top: -75px !important;
-        padding: 0 15% !important;
-        position: relative;
-        z-index: 10;
-        display: flex;
-        justify-content: center;
-    }
-
-    [data-testid="stButton"] button { 
+    [data-testid="stButton"] > button { 
         background-color: #21262d !important;
         color: white !important;
         border: 1px solid #30363d !important;
@@ -81,10 +71,21 @@ st.markdown("""
         width: 100% !important;
     }
     
-    [data-testid="stButton"] button:hover {
+    [data-testid="stButton"] > button:hover {
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
+    }
+
+    /* Botão de deletar nas linhas de edição */
+    div[data-testid="column"] button[kind="secondary"] {
+        background-color: #21262d !important;
+        border: 1px solid #30363d !important;
+        color: #ff4b4b !important;
+    }
+    div[data-testid="column"] button[kind="secondary"]:hover {
+        background-color: rgba(255, 75, 75, 0.15) !important;
+        border-color: #ff4b4b !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -168,61 +169,62 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Compacto e Centralizado)
+# 6. PAINEL DE CONFIGURAÇÃO (Centralizado, Escuro e Intuitivo)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
 
-# Colunas para centralizar e diminuir a largura do painel de gerenciamento
 col_l, col_center, col_r = st.columns([1, 2.2, 1])
 
 with col_center:
-    st.subheader("⚙️ Gerenciar Cronômetros")
-    st.markdown("<div style='font-size: 13px; color: #8b949e; margin-bottom: 10px;'>Edite nome/minutos, adicione com o botão <b>+</b> ou delete selecionando a linha.</div>", unsafe_allow_html=True)
+    st.subheader("⚙️ Adicionar Novo Cronômetro")
+    
+    with st.form("form_adicionar", clear_on_submit=True):
+        col_a1, col_a2 = st.columns([2, 1])
+        with col_a1:
+            novo_nome = st.text_input("Nome do Fazendeiro", placeholder="Ex: MKR 12")
+        with col_a2:
+            novos_minutos = st.number_input("Minutos", min_value=1, max_value=1440, value=180, step=1)
+            
+        btn_adicionar = st.form_submit_button("➕ Adicionar Novo Cronômetro", use_container_width=True)
+        if btn_adicionar:
+            if novo_nome.strip():
+                novo_id = f"custom_{time.time()}"
+                st.session_state.lista_contas.append({
+                    "id": novo_id,
+                    "nome": novo_nome.strip(),
+                    "minutos": int(novos_minutos)
+                })
+                st.success(f"'{novo_nome}' adicionado!")
+                st.rerun()
+            else:
+                st.error("Digite um nome válido.")
 
-    df_data = pd.DataFrame([{
-        "Nome": c["nome"],
-        "Minutos": int(c["minutos"]),
-        "_id": c["id"]
-    } for c in st.session_state.lista_contas])
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.subheader("✏️ Gerenciar / Deletar Existentes")
 
     with st.container(border=True):
-        edited_df = st.data_editor(
-            df_data[["Nome", "Minutos"]],
-            num_rows="dynamic",
-            use_container_width=True,
-            height=280,
-            key="tabela_gerenciamento"
-        )
-        
-        if st.button("💾 Salvar Alterações na Tabela", use_container_width=True):
-            nova_lista = []
-            for idx, row in edited_df.iterrows():
-                nome = str(row["Nome"]).strip()
-                if not nome or nome == "nan":
-                    continue
-                try:
-                    minutos = int(row["Minutos"])
-                except:
-                    minutos = 180
-                
-                if idx < len(st.session_state.lista_contas):
-                    conta_id = st.session_state.lista_contas[idx]["id"]
-                else:
-                    conta_id = f"custom_{time.time()}_{idx}"
-                    
-                nova_lista.append({
-                    "id": conta_id,
-                    "nome": nome,
-                    "minutos": minutos
-                })
-                
-            st.session_state.lista_contas = nova_lista
-            valid_ids = [c["id"] for c in nova_lista]
-            st.session_state.global_timers = {k: v for k, v in st.session_state.global_timers.items() if k in valid_ids}
+        for idx, conta in enumerate(list(st.session_state.lista_contas)):
+            id_c = conta["id"]
             
-            st.success("Salvo com sucesso!")
-            st.rerun()
+            c_nome, c_min, c_salvar, c_del = st.columns([3, 2, 1.2, 1.2])
+            
+            with c_nome:
+                novo_nome_val = st.text_input("Nome", value=conta["nome"], key=f"edit_nome_{id_c}", label_visibility="collapsed")
+            with c_min:
+                novo_min_val = st.number_input("Min", min_value=1, max_value=1440, value=int(conta["minutos"]), step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
+            with c_salvar:
+                if st.button("💾", key=f"save_{id_c}", help="Salvar alterações", use_container_width=True):
+                    conta["nome"] = novo_nome_val
+                    conta["minutos"] = int(novo_min_val)
+                    st.success("Salvo!")
+                    st.rerun()
+            with c_del:
+                if st.button("🗑️", key=f"del_{id_c}", help="Deletar este cronômetro", use_container_width=True):
+                    st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
+                    if id_c in st.session_state.global_timers:
+                        del st.session_state.global_timers[id_c]
+                    st.rerun()
 
 # 7. Sistema de Áudio (JavaScript)
 if tocar_bip:
