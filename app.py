@@ -6,9 +6,9 @@ import streamlit.components.v1 as components
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. CACHE PERSISTENTE V6 (Limpa o cache antigo e garante a nova estrutura)
+# 2. CACHE PERSISTENTE V7
 @st.cache_resource
-def get_global_data_v6():
+def get_global_data_v7():
     contas_iniciais = []
     for i in range(2, 12):
         contas_iniciais.append({
@@ -21,7 +21,7 @@ def get_global_data_v6():
         "contas": contas_iniciais
     }
 
-dados_globais = get_global_data_v6()
+dados_globais = get_global_data_v7()
 global_timers = dados_globais.setdefault("timers", {})
 lista_contas = dados_globais.setdefault("contas", [])
 
@@ -29,7 +29,7 @@ lista_contas = dados_globais.setdefault("contas", [])
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 4. CSS
+# 4. CSS Atualizado (Com o estilo do botão de lixeira no card)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -47,6 +47,7 @@ st.markdown("""
         text-align: center;
         transition: 0.3s;
         margin-bottom: 20px;
+        position: relative;
     }
     
     .timer-ready {
@@ -119,6 +120,15 @@ if len(lista_contas) > 0:
         label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
         
         with cols[idx % 5]:
+            # Botão de Lixeira direto no topo do card (Mini coluna interna)
+            c_card_titulo, c_card_del = st.columns([4, 1])
+            with c_card_del:
+                if st.button("🗑️", key=f"card_del_{id_conta}", help="Deletar este cronômetro"):
+                    lista_contas.remove(conta)
+                    if id_conta in global_timers:
+                        del global_timers[id_conta]
+                    st.rerun()
+            
             texto_timer = "00:00:00"
             texto_termino = "Termina às: --:--" 
             cor_timer = "#484f58"
@@ -173,11 +183,10 @@ else:
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
-st.subheader("⚙️ Gerenciar Cronômetros (Adicionar, Renomear, Ajustar Minutos e Deletar)")
+st.subheader("⚙️ Adicionar Novo Cronômetro")
 
 # Adicionar Novo Cronômetro
 with st.form("form_adicionar", clear_on_submit=True):
-    st.write("**Adicionar Novo Cronômetro**")
     col_add1, col_add2, col_add3 = st.columns([2, 2, 1])
     with col_add1:
         novo_nome = st.text_input("Nome do Personagem / Fazendeiro", placeholder="Ex: Fazendeiro MKR 12")
@@ -201,10 +210,10 @@ with st.form("form_adicionar", clear_on_submit=True):
         else:
             st.error("Digite um nome válido.")
 
-st.write("---")
-st.write("**Editar ou Deletar Cronômetros Existentes**")
+st.markdown("---")
+st.subheader("✏️ Editar Cronômetros Existentes")
 
-# Listagem para edição e exclusão individual
+# Listagem para edição individual com espaçamento correto
 for idx, conta in enumerate(list(lista_contas)):
     id_c = conta["id"]
     col_e1, col_e2, col_e3, col_e4 = st.columns([3, 2, 1, 1])
@@ -214,22 +223,18 @@ for idx, conta in enumerate(list(lista_contas)):
     with col_e2:
         novo_min_val = st.number_input("Minutos", min_value=1, max_value=1440, value=conta["minutos"], step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
     with col_e3:
-        btn_salvar = st.button("💾 Salvar", key=f"save_{id_c}")
+        if st.button("💾 Salvar", key=f"save_{id_c}", use_container_width=True):
+            conta["nome"] = novo_nome_val
+            conta["minutos"] = int(novo_min_val)
+            st.success("Atualizado!")
+            st.rerun()
     with col_e4:
-        btn_deletar = st.button("🗑️ Deletar", key=f"del_{id_c}")
-        
-    if btn_salvar:
-        conta["nome"] = novo_nome_val
-        conta["minutos"] = int(novo_min_val)
-        st.success("Atualizado!")
-        st.rerun()
-        
-    if btn_deletar:
-        lista_contas.remove(conta)
-        if id_c in global_timers:
-            del global_timers[id_c]
-        st.warning(f"Cronômetro removido.")
-        st.rerun()
+        if st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True):
+            lista_contas.remove(conta)
+            if id_c in global_timers:
+                del global_timers[id_c]
+            st.warning("Removido.")
+            st.rerun()
 
 # 8. Sistema de Áudio (JavaScript)
 if tocar_bip:
