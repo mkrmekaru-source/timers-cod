@@ -6,9 +6,9 @@ import streamlit.components.v1 as components
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. CACHE PERSISTENTE V7
+# 2. CACHE PERSISTENTE V8
 @st.cache_resource
-def get_global_data_v7():
+def get_global_data_v8():
     contas_iniciais = []
     for i in range(2, 12):
         contas_iniciais.append({
@@ -21,7 +21,7 @@ def get_global_data_v7():
         "contas": contas_iniciais
     }
 
-dados_globais = get_global_data_v7()
+dados_globais = get_global_data_v8()
 global_timers = dados_globais.setdefault("timers", {})
 lista_contas = dados_globais.setdefault("contas", [])
 
@@ -29,7 +29,7 @@ lista_contas = dados_globais.setdefault("contas", [])
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 4. CSS Atualizado (Com o estilo do botão de lixeira no card)
+# 4. CSS Ajustado (Estilo compacto para o botão de deletar no card)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -67,16 +67,8 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    [data-testid="stButton"] {
-        margin-top: -75px !important;
-        padding: 0 15% !important;
-        position: relative;
-        z-index: 10;
-        display: flex;
-        justify-content: center;
-    }
-
-    [data-testid="stButton"] button { 
+    /* Botão Principal de Iniciar */
+    [data-testid="stButton"] > button { 
         background-color: #21262d !important;
         color: white !important;
         border: 1px solid #30363d !important;
@@ -86,10 +78,28 @@ st.markdown("""
         width: 100% !important;
     }
     
-    [data-testid="stButton"] button:hover {
+    [data-testid="stButton"] > button:hover {
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
+    }
+
+    /* Estilo Compacto para o Botão de Deletar no Card */
+    div[data-testid="column"] button[kind="secondary"] {
+        background-color: transparent !important;
+        border: none !important;
+        color: #8b949e !important;
+        font-size: 14px !important;
+        padding: 0px !important;
+        min-height: 24px !important;
+        height: 24px !important;
+        width: 24px !important;
+        box-shadow: none !important;
+    }
+    div[data-testid="column"] button[kind="secondary"]:hover {
+        color: #ff4b4b !important;
+        background-color: rgba(255, 75, 75, 0.1) !important;
+        border-radius: 4px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -120,14 +130,18 @@ if len(lista_contas) > 0:
         label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
         
         with cols[idx % 5]:
-            # Botão de Lixeira direto no topo do card (Mini coluna interna)
-            c_card_titulo, c_card_del = st.columns([4, 1])
-            with c_card_del:
+            # Container interno alinhado para o título e a lixeira vermelha menor
+            c_tit, c_del = st.columns([5, 1])
+            with c_tit:
+                st.markdown(f'<div class="account-label">{nome_conta}</div>', unsafe_allow_html=True)
+            with c_del:
                 if st.button("🗑️", key=f"card_del_{id_conta}", help="Deletar este cronômetro"):
                     lista_contas.remove(conta)
                     if id_conta in global_timers:
                         del global_timers[id_conta]
                     st.rerun()
+            
+            st.markdown(f'<div class="cycle-label">Ciclo: {label_ciclo}</div>', unsafe_allow_html=True)
             
             texto_timer = "00:00:00"
             texto_termino = "Termina às: --:--" 
@@ -163,18 +177,19 @@ if len(lista_contas) > 0:
                         st.session_state.beep_played[id_conta] = True
             
             st.markdown(f"""
-                <div class="{card_class}">
-                    <div class="account-label">{nome_conta}</div>
-                    <div class="cycle-label">Ciclo: {label_ciclo}</div>
+                <div class="{card_class}" style="margin-top: -10px;">
                     <div class="end-time-label">{texto_termino}</div>
                     <div class="timer-text" style="color: {cor_timer};">{texto_timer}</div>
                 </div>
             """, unsafe_allow_html=True)
             
+            # Botão Iniciar com espaçamento correto alinhado ao card
+            st.markdown('<div style="margin-top: -65px; position: relative; z-index: 10;">', unsafe_allow_html=True)
             if st.button(f"Iniciar", key=f"btn_{id_conta}", use_container_width=True):
                 global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
                 st.session_state.beep_played[id_conta] = False
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 else:
     st.info("Nenhum cronômetro cadastrado. Adicione um abaixo!")
 
@@ -185,7 +200,6 @@ st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
 st.subheader("⚙️ Adicionar Novo Cronômetro")
 
-# Adicionar Novo Cronômetro
 with st.form("form_adicionar", clear_on_submit=True):
     col_add1, col_add2, col_add3 = st.columns([2, 2, 1])
     with col_add1:
@@ -213,7 +227,6 @@ with st.form("form_adicionar", clear_on_submit=True):
 st.markdown("---")
 st.subheader("✏️ Editar Cronômetros Existentes")
 
-# Listagem para edição individual com espaçamento correto
 for idx, conta in enumerate(list(lista_contas)):
     id_c = conta["id"]
     col_e1, col_e2, col_e3, col_e4 = st.columns([3, 2, 1, 1])
