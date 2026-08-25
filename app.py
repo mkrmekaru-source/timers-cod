@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM ALINHAMENTO FLEXBOX PERFEITO PARA OS BOTÕES
+# 3. CSS COMPLETO COM TEMA ESCURO PARA OS INPUTS E BOTÕES
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -49,6 +49,17 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
     }
     
+    /* ESCURECER AS CAIXAS DE ENTRADA (Inputs de texto e número) */
+    div[data-baseweb="base-input"], input, div[data-baseweb="input"] {
+        background-color: #21262d !important;
+        color: #ffffff !important;
+        border-color: #30363d !important;
+    }
+    
+    input {
+        color: #ffffff !important;
+    }
+    
     /* PADRONIZAÇÃO DE TODOS OS BOTÕES NO TEMA ESCURO */
     .stButton > button, [data-testid="stFormSubmitButton"] > button { 
         background-color: #21262d !important;
@@ -66,7 +77,6 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    /* Alinhamento perfeito dos botões de Salvar/Deletar via Flexbox (sem espaçadores manuais) */
     .row-widget.stHorizontal {
         align-items: flex-end !important;
     }
@@ -154,7 +164,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado Milimetricamente)
+# 6. PAINEL DE CONFIGURAÇÃO (Alinhado e Simétrico)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
