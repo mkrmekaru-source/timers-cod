@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO E DEFINITIVO
+# 3. CSS "FORA DA CAIXA" (Alinhamento milimétrico e encaixe perfeito dos botões)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -42,7 +42,7 @@ st.markdown("""
         border: 1px solid #30363d;
         text-align: center;
         transition: 0.3s;
-        margin-bottom: 10px;
+        margin-bottom: 0px;
     }
     
     .timer-ready {
@@ -62,10 +62,11 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    /* Encaixe perfeito do botão Iniciar no topo */
-    .timer-card-wrapper [data-testid="stButton"] {
-        margin-top: -65px !important;
-        padding: 0 10% !important;
+    /* Puxa o botão para dentro da base do cartão de forma limpa */
+    .tucked-btn {
+        margin-top: -55px !important;
+        margin-bottom: 20px !important;
+        padding: 0 12% !important;
         position: relative;
         z-index: 10;
         display: flex;
@@ -89,9 +90,9 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    /* Alinhamento perfeito dos botões de ação na seção inferior */
-    .action-btn {
-        margin-top: 15px !important;
+    /* Sincroniza a altura dos botões de Salvar/Deletar com os inputs (compensa o label fantasma) */
+    .sync-btn {
+        margin-top: 28px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -165,7 +166,7 @@ def render_timer_grid():
                     </div>
                 """, unsafe_allow_html=True)
                 
-                st.markdown('<div class="timer-card-wrapper">', unsafe_allow_html=True)
+                st.markdown('<div class="tucked-btn">', unsafe_allow_html=True)
                 if st.button(f"Iniciar {nome_conta}", key=f"btn_{id_conta}", use_container_width=True):
                     st.session_state.global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
                     st.session_state.beep_played[id_conta] = False
@@ -177,7 +178,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado Milimetricamente)
+# 6. PAINEL DE CONFIGURAÇÃO (Alinhado e Simétrico)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -225,7 +226,7 @@ with col_center:
             with c_min:
                 novo_min_val = st.number_input("Min", min_value=1, max_value=1440, value=int(conta["minutos"]), step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
             with c_salvar:
-                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
+                st.markdown('<div class="sync-btn">', unsafe_allow_html=True)
                 if st.button("Salvar", key=f"save_{id_c}", use_container_width=True):
                     conta["nome"] = novo_nome_val
                     conta["minutos"] = int(novo_min_val)
@@ -233,7 +234,7 @@ with col_center:
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with c_del:
-                st.markdown('<div class="action-btn">', unsafe_allow_html=True)
+                st.markdown('<div class="sync-btn">', unsafe_allow_html=True)
                 if st.button("Deletar", key=f"del_{id_c}", use_container_width=True):
                     st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
                     if id_c in st.session_state.global_timers:
