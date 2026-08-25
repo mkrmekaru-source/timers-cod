@@ -23,7 +23,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS ORGANIZADO (Com escopo isolado para não afetar os botões de baixo)
+# 3. CSS ORGANIZADO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -169,7 +169,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado à Esquerda)
+# 6. PAINEL DE CONFIGURAÇÃO (Botões à Direita)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -203,17 +203,17 @@ st.subheader("✏️ Gerenciar e Deletar Cronômetros Existentes")
 
 for idx, conta in enumerate(list(st.session_state.lista_contas)):
     id_c = conta["id"]
-    # Ordem exata nas colunas: [Salvar] [Deletar] [Nome] [Minutos]
-    col_e1, col_e2, col_e3, col_e4 = st.columns([1, 1, 3, 2])
+    # Ordem exata nas colunas: [Nome] [Minutos] [Salvar] [Deletar]
+    col_e1, col_e2, col_e3, col_e4 = st.columns([3, 2, 1, 1])
     
     with col_e1:
-        btn_salvar = st.button("💾 Salvar", key=f"save_{id_c}", use_container_width=True)
-    with col_e2:
-        btn_deletar = st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True)
-    with col_e3:
         novo_nome_val = st.text_input("Nome", value=conta["nome"], key=f"edit_nome_{id_c}", label_visibility="collapsed")
-    with col_e4:
+    with col_e2:
         novo_min_val = st.number_input("Minutos", min_value=1, max_value=1440, value=conta["minutos"], step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
+    with col_e3:
+        btn_salvar = st.button("💾 Salvar", key=f"save_{id_c}", use_container_width=True)
+    with col_e4:
+        btn_deletar = st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True)
         
     if btn_salvar:
         conta["nome"] = novo_nome_val
