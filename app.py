@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO E DEFINITIVO (Tema escuro universal e cartões nativos)
+# 3. CSS COM CORES E TEMA ESCURO PADRONIZADOS
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -34,12 +34,19 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 3rem; }
     
-    /* Padroniza todos os containers com borda (Cartões do Topo e Painéis) no tema escuro */
-    [data-testid="stContainer"] {
+    /* Padroniza os cartões dos cronômetros com o fundo escuro perfeito (#161b22) */
+    div[data-testid="column"] div[data-testid="stContainer"] {
         background-color: #161b22 !important;
         border: 1px solid #30363d !important;
         border-radius: 12px !important;
         padding: 15px !important;
+    }
+    
+    /* Estado PRONTO (Verde com destaque) */
+    .container-ready {
+        background-color: rgba(63, 185, 80, 0.05) !important;
+        border: 2px solid #3fb950 !important;
+        box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
     }
     
     /* PADRONIZAÇÃO DE TODOS OS BOTÕES NO TEMA ESCURO */
@@ -80,7 +87,7 @@ if 'beep_played' not in st.session_state:
 
 tocar_bip = False
 
-# 5. FRAGMENTO DOS TIMERS (Botões nativamente dentro dos cartões escuros)
+# 5. FRAGMENTO DOS TIMERS (Com cores dinâmicas para cada estado)
 @st.fragment(run_every=1)
 def render_timer_grid():
     if len(st.session_state.lista_contas) > 0:
@@ -94,39 +101,44 @@ def render_timer_grid():
             label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
             
             with cols[idx % 5]:
-                with st.container(border=True):
-                    texto_timer = "00:00:00"
-                    texto_termino = "Termina às: --:--" 
-                    cor_timer = "#484f58"
+                texto_timer = "00:00:00"
+                texto_termino = "Termina às: --:--" 
+                cor_timer = "#484f58"
+                is_ready = False
+                
+                if id_conta in st.session_state.global_timers:
+                    tempo_fim = st.session_state.global_timers[id_conta]
+                    restante = tempo_fim - agora_br()
+                    segundos_restantes = restante.total_seconds()
                     
-                    if id_conta in st.session_state.global_timers:
-                        tempo_fim = st.session_state.global_timers[id_conta]
-                        restante = tempo_fim - agora_br()
-                        segundos_restantes = restante.total_seconds()
+                    duracao_seg = minutos * 60
+                    if segundos_restantes > 0:
+                        h, r = divmod(int(segundos_restantes), 3600)
+                        m, s = divmod(r, 60)
+                        texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
+                        texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
                         
-                        duracao_seg = minutos * 60
-                        if segundos_restantes > 0:
-                            h, r = divmod(int(segundos_restantes), 3600)
-                            m, s = divmod(r, 60)
-                            texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
-                            texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
-                            
-                            if segundos_restantes > (duracao_seg / 2):
-                                cor_timer = "#58a6ff" 
-                            elif segundos_restantes > 3600:
-                                cor_timer = "#ffa500" 
-                            else:
-                                cor_timer = "#ff4b4b" 
+                        # Cores dinâmicas baseadas no progresso
+                        if segundos_restantes > (duracao_seg / 2):
+                            cor_timer = "#58a6ff" # Azul (Mais de 50%)
+                        elif segundos_restantes > 3600:
+                            cor_timer = "#ffa500" # Laranja (Menos de 50%)
                         else:
-                            texto_timer = "PRONTO!"
-                            texto_termino = "Termina às: AGORA"
-                            cor_timer = "#3fb950" 
-                            
-                            if not st.session_state.beep_played.get(id_conta, False):
-                                st.session_state.beep_played[id_conta] = True
-                    
+                            cor_timer = "#ff4b4b" # Vermelho (Menos de 1 hora)
+                    else:
+                        texto_timer = "PRONTO!"
+                        texto_termino = "Termina às: AGORA"
+                        cor_timer = "#3fb950" # Verde
+                        is_ready = True
+                        
+                        if not st.session_state.beep_played.get(id_conta, False):
+                            st.session_state.beep_played[id_conta] = True
+                
+                # Renderiza o container com classe condicional se estiver pronto
+                container_class = "container-ready" if is_ready else ""
+                with st.container(border=True):
                     st.markdown(f"""
-                        <div style="text-align: center;">
+                        <div style="text-align: center;" class="{container_class}">
                             <div style="font-size: 18px; font-weight: bold; color: #8b949e; margin-bottom: 2px;">{nome_conta}</div>
                             <div style="font-size: 14px; color: #8b949e; margin-bottom: 2px;">Ciclo: {label_ciclo}</div>
                             <div style="font-size: 13px; color: #58a6ff; margin-bottom: 8px; font-style: italic;">{texto_termino}</div>
@@ -144,7 +156,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado Perfeitamente)
+# 6. PAINEL DE CONFIGURAÇÃO (Alinhado e Simétrico)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
