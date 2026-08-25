@@ -85,7 +85,7 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    /* Alinha perfeitamente os botões de edição da tabela inferior com os inputs */
+    /* Alinha os botões de edição da tabela inferior com os inputs */
     div[data-testid="column"] .stButton {
         margin-top: 27px !important;
     }
@@ -171,20 +171,20 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Perfeitamente Alinhado)
+# 6. PAINEL DE CONFIGURAÇÃO (Botões à Esquerda)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
 st.subheader("⚙️ Adicionar Novo Cronômetro")
 
 with st.form("form_adicionar", clear_on_submit=True):
-    col_add1, col_add2, col_add3 = st.columns([2, 2, 1])
+    col_add3, col_add1, col_add2 = st.columns([1, 2, 2])
+    with col_add3:
+        btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
     with col_add1:
         novo_nome = st.text_input("Nome do Personagem / Fazendeiro", placeholder="Ex: Fazendeiro MKR 12", label_visibility="collapsed")
     with col_add2:
          novos_minutos = st.number_input("Duração em Minutos", min_value=1, max_value=1440, value=180, step=1, label_visibility="collapsed")
-    with col_add3:
-        btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
         
     if btn_adicionar:
         if novo_nome.strip():
@@ -204,21 +204,26 @@ st.subheader("✏️ Gerenciar e Deletar Cronômetros Existentes")
 
 for idx, conta in enumerate(list(st.session_state.lista_contas)):
     id_c = conta["id"]
-    col_e1, col_e2, col_e3, col_e4 = st.columns([3, 2, 1, 1])
+    # Colocando os botões de Salvar e Deletar no lado esquerdo ([1, 1, 3, 2])
+    col_e3, col_e4, col_e1, col_e2 = st.columns([1, 1, 3, 2])
     
+    with col_e3:
+        btn_salvar = st.button("💾 Salvar", key=f"save_{id_c}", use_container_width=True)
+    with col_e4:
+        btn_deletar = st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True)
     with col_e1:
         novo_nome_val = st.text_input("Nome", value=conta["nome"], key=f"edit_nome_{id_c}", label_visibility="collapsed")
     with col_e2:
         novo_min_val = st.number_input("Minutos", min_value=1, max_value=1440, value=conta["minutos"], step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
-    with col_e3:
-        if st.button("💾 Salvar", key=f"save_{id_c}", use_container_width=True):
-            conta["nome"] = novo_nome_val
-            conta["minutos"] = int(novo_min_val)
-            st.success("Atualizado!")
-            st.rerun()
-    with col_e4:
-        if st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True):
-            st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
-            if id_c in st.session_state.global_timers:
-                del st.session_state.global_timers[id_c]
-            st.rerun()
+        
+    if btn_salvar:
+        conta["nome"] = novo_nome_val
+        conta["minutos"] = int(novo_min_val)
+        st.success("Atualizado!")
+        st.rerun()
+        
+    if btn_deletar:
+        st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
+        if id_c in st.session_state.global_timers:
+            del st.session_state.global_timers[id_c]
+        st.rerun()
