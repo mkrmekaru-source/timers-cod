@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO E DEFINITIVO
+# 3. CSS COMPLETO E DEFINITIVO (Padroniza TODOS os botões, incluindo formulários)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -34,7 +34,7 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 3rem; }
     
-    /* Cartões do Topo Idênticos à Referência */
+    /* Cartões do Topo */
     .timer-card {
         background-color: #161b22;
         padding: 20px 15px 75px 15px;
@@ -63,7 +63,7 @@ st.markdown("""
     }
     
     /* Encaixe perfeito do botão Iniciar no topo */
-    [data-testid="stButton"] {
+    .timer-card-wrapper [data-testid="stButton"] {
         margin-top: -65px !important;
         padding: 0 10% !important;
         position: relative;
@@ -72,9 +72,10 @@ st.markdown("""
         justify-content: center;
     }
 
-    [data-testid="stButton"] button { 
+    /* PADRONIZAÇÃO DE TODOS OS BOTÕES (Normais e de Formulário) NO TEMA ESCURO */
+    .stButton > button, [data-testid="stFormSubmitButton"] > button { 
         background-color: #21262d !important;
-        color: white !important;
+        color: #ffffff !important;
         border: 1px solid #30363d !important;
         border-radius: 8px !important;
         height: 38px !important;
@@ -82,16 +83,10 @@ st.markdown("""
         width: 100% !important;
     }
     
-    [data-testid="stButton"] button:hover {
+    .stButton > button:hover, [data-testid="stFormSubmitButton"] > button:hover {
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
-    }
-
-    /* Correção específica para alinhar perfeitamente os botões da parte inferior */
-    div[data-testid="column"] .stButton {
-        margin-top: 0px !important;
-        padding: 0px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -165,10 +160,12 @@ def render_timer_grid():
                     </div>
                 """, unsafe_allow_html=True)
                 
+                st.markdown('<div class="timer-card-wrapper">', unsafe_allow_html=True)
                 if st.button(f"Iniciar {nome_conta}", key=f"btn_{id_conta}", use_container_width=True):
                     st.session_state.global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
                     st.session_state.beep_played[id_conta] = False
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("Nenhum cronômetro cadastrado. Adicione um abaixo!")
 
@@ -187,13 +184,15 @@ with col_center:
     
     with st.container(border=True):
         with st.form("form_adicionar", clear_on_submit=True):
-            col_a1, col_a2 = st.columns([2, 1])
+            col_a1, col_a2, col_a3 = st.columns([2, 1, 1])
             with col_a1:
                 novo_nome = st.text_input("Nome do Fazendeiro", placeholder="Ex: MKR 12")
             with col_a2:
                 novos_minutos = st.number_input("Minutos", min_value=1, max_value=1440, value=180, step=1)
+            with col_a3:
+                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+                btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
                 
-            btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
             if btn_adicionar:
                 if novo_nome.strip():
                     novo_id = f"custom_{time.time()}"
