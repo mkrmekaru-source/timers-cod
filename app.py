@@ -166,7 +166,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Totalmente estável e funcional)
+# 6. PAINEL DE CONFIGURAÇÃO (Perfeitamente Alinhado)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -179,9 +179,8 @@ with st.form("form_adicionar", clear_on_submit=True):
     with col_add2:
          novos_minutos = st.number_input("Duração em Minutos", min_value=1, max_value=1440, value=180, step=1)
     with col_add3:
-        st.write("")
-        st.write("")
-        btn_adicionar = st.form_submit_button("➕ Adicionar")
+        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+        btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
         
     if btn_adicionar:
         if novo_nome.strip():
@@ -208,12 +207,14 @@ for idx, conta in enumerate(list(st.session_state.lista_contas)):
     with col_e2:
         novo_min_val = st.number_input("Minutos", min_value=1, max_value=1440, value=conta["minutos"], step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
     with col_e3:
+        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
         if st.button("💾 Salvar", key=f"save_{id_c}", use_container_width=True):
             conta["nome"] = novo_nome_val
             conta["minutos"] = int(novo_min_val)
             st.success("Atualizado!")
             st.rerun()
     with col_e4:
+        st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
         if st.button("🗑️ Deletar", key=f"del_{id_c}", use_container_width=True):
             st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
             if id_c in st.session_state.global_timers:
