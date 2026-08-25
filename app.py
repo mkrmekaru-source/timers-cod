@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS LIMPO E PROFISSIONAL (Sem hacks de margem)
+# 3. CSS PROFISSIONAL (Padroniza todos os botões no tema escuro)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -34,6 +34,23 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 3rem; }
     
+    /* Padroniza todos os botões do app com visual escuro profissional */
+    .stButton > button { 
+        background-color: #21262d !important;
+        color: #ffffff !important;
+        border: 1px solid #30363d !important;
+        border-radius: 8px !important;
+        height: 40px !important;
+        font-size: 14px !important;
+        width: 100% !important;
+    }
+    
+    .stButton > button:hover {
+        border-color: #58a6ff !important;
+        color: #58a6ff !important;
+        background-color: #30363d !important;
+    }
+
     .logo-spacer { margin-bottom: 40px; }
     </style>
     """, unsafe_allow_html=True)
@@ -50,7 +67,7 @@ if 'beep_played' not in st.session_state:
 
 tocar_bip = False
 
-# 5. FRAGMENTO DOS TIMERS (Com containers nativos perfeitamente alinhados)
+# 5. FRAGMENTO DOS TIMERS
 @st.fragment(run_every=1)
 def render_timer_grid():
     if len(st.session_state.lista_contas) > 0:
@@ -64,7 +81,6 @@ def render_timer_grid():
             label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
             
             with cols[idx % 5]:
-                # Usando container nativo border=True para manter o botão sempre dentro do card perfeitamente
                 with st.container(border=True):
                     st.markdown(f"<div style='font-size: 16px; font-weight: bold; color: #8b949e; text-align: center;'>{nome_conta}</div>", unsafe_allow_html=True)
                     st.markdown(f"<div style='font-size: 13px; color: #8b949e; text-align: center; margin-bottom: 2px;'>Ciclo: {label_ciclo}</div>", unsafe_allow_html=True)
