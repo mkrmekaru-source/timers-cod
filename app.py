@@ -6,9 +6,9 @@ import streamlit.components.v1 as components
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. CACHE PERSISTENTE V9 (Estrutura limpa e organizada)
+# 2. CACHE PERSISTENTE V10
 @st.cache_resource
-def get_global_data_v9():
+def get_global_data_v10():
     contas_iniciais = []
     for i in range(2, 12):
         contas_iniciais.append({
@@ -21,7 +21,7 @@ def get_global_data_v9():
         "contas": contas_iniciais
     }
 
-dados_globais = get_global_data_v9()
+dados_globais = get_global_data_v10()
 global_timers = dados_globais.setdefault("timers", {})
 lista_contas = dados_globais.setdefault("contas", [])
 
@@ -29,7 +29,7 @@ lista_contas = dados_globais.setdefault("contas", [])
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 4. CSS Customizado para ajustar detalhes visuais e deixar a lixeira compacta
+# 4. CSS Customizado (Botão visível e lixeira vermelha)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -39,12 +39,29 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 2rem; }
     
-    /* Estilo sutil para o botão de deletar dentro do card */
+    /* Botão Iniciar sempre visível, com visual escuro profissional */
+    .stButton > button { 
+        background-color: #21262d !important;
+        color: #ffffff !important;
+        border: 1px solid #30363d !important;
+        border-radius: 8px !important;
+        height: 40px !important;
+        font-size: 14px !important;
+        width: 100% !important;
+    }
+    
+    .stButton > button:hover {
+        border-color: #58a6ff !important;
+        color: #58a6ff !important;
+        background-color: #30363d !important;
+    }
+
+    /* Botão da lixeira menor e vermelho */
     div[data-testid="column"] button[kind="secondary"] {
         background-color: transparent !important;
         border: none !important;
-        color: #8b949e !important;
-        font-size: 14px !important;
+        color: #ff4b4b !important;
+        font-size: 16px !important;
         padding: 0px !important;
         min-height: 24px !important;
         height: 24px !important;
@@ -52,8 +69,7 @@ st.markdown("""
         box-shadow: none !important;
     }
     div[data-testid="column"] button[kind="secondary"]:hover {
-        color: #ff4b4b !important;
-        background-color: rgba(255, 75, 75, 0.1) !important;
+        background-color: rgba(255, 75, 75, 0.15) !important;
         border-radius: 4px !important;
     }
 
@@ -85,9 +101,7 @@ if len(lista_contas) > 0:
         label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
         
         with cols[idx % 5]:
-            # Usando container nativo com borda para manter tudo perfeitamente alinhado na caixa
             with st.container(border=True):
-                # Cabeçalho do Card: Nome e Lixeira vermelha compacta
                 c_tit, c_del = st.columns([5, 1])
                 with c_tit:
                     st.markdown(f"**{nome_conta}**")
@@ -117,26 +131,23 @@ if len(lista_contas) > 0:
                         texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
                         
                         if segundos_restantes > (duracao_seg / 2):
-                            cor_timer = "#58a6ff" # Azul
+                            cor_timer = "#58a6ff" 
                         elif segundos_restantes > 3600:
-                            cor_timer = "#ffa500" # Laranja
+                            cor_timer = "#ffa500" 
                         else:
-                            cor_timer = "#ff4b4b" # Vermelho
+                            cor_timer = "#ff4b4b" 
                     else:
                         texto_timer = "PRONTO!"
                         texto_termino = "Termina às: AGORA"
-                        cor_timer = "#3fb950" # Verde
+                        cor_timer = "#3fb950" 
                         
                         if not st.session_state.beep_played.get(id_conta, False):
                             tocar_bip = True
                             st.session_state.beep_played[id_conta] = True
                 
                 st.markdown(f"<div style='font-size: 13px; color: #58a6ff; font-style: italic; margin-bottom: 5px;'>{texto_termino}</div>", unsafe_allow_html=True)
-                
-                # Cronômetro Grande Centralizado
                 st.markdown(f"<div style='font-size: 42px; font-weight: bold; font-family: monospace; text-align: center; color: {cor_timer}; margin: 10px 0;'>{texto_timer}</div>", unsafe_allow_html=True)
                 
-                # Botão Iniciar dentro do card
                 if st.button(f"Iniciar", key=f"btn_{id_conta}", use_container_width=True):
                     global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
                     st.session_state.beep_played[id_conta] = False
