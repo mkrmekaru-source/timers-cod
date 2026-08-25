@@ -6,17 +6,25 @@ import streamlit.components.v1 as components
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. CACHE PERSISTENTE V4 (Guarda os tempos finais e as durações customizadas no servidor)
+# 2. CACHE PERSISTENTE V5 (Gerencia lista dinâmica de contas e tempos no servidor)
 @st.cache_resource
 def get_global_data():
+    # Lista inicial padrão com os 10 fazendeiros originais (em minutos: 180 min = 3h)
+    contas_iniciais = []
+    for i in range(2, 12):
+        contas_iniciais.append({
+            "id": f"mkr_{i}",
+            "nome": f"Fazendeiro MKR {i}",
+            "minutos": 180
+        })
     return {
         "timers": {},
-        "horas": {f"MKR {i}": 3 for i in range(2, 12)} # Padrão inicial: 3 horas para todos
+        "contas": contas_iniciais
     }
 
 dados_globais = get_global_data()
 global_timers = dados_globais["timers"]
-config_horas = dados_globais["horas"]
+lista_contas = dados_globais["contas"]
 
 # 3. Função de Tempo (Horário de Brasília)
 def agora_br():
@@ -30,7 +38,7 @@ st.markdown("""
     footer {visibility: hidden;}
     
     .stApp { background-color: #0e1117; color: #ffffff; }
-    .block-container { padding-top: 0rem; padding-bottom: 0rem; }
+    .block-container { padding-top: 0rem; padding-bottom: 2rem; }
     
     .timer-card {
         background-color: #161b22;
@@ -39,6 +47,7 @@ st.markdown("""
         border: 1px solid #30363d;
         text-align: center;
         transition: 0.3s;
+        margin-bottom: 20px;
     }
     
     .timer-ready {
@@ -83,7 +92,7 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    .logo-spacer { margin-bottom: 30px; }
+    .logo-spacer { margin-bottom: 40px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -94,101 +103,138 @@ with col_m:
 
 st.markdown('<div class="logo-spacer"></div>', unsafe_allow_html=True)
 
-# 6. PAINEL DE CONFIGURAÇÃO DE HORAS NO SITE
-with st.expander("⚙️ Configurar Horas dos Ciclos (Clique para abrir/fechar)"):
-    st.write("Ajuste quantas horas cada fazendeiro vai durar antes de dar o alarme:")
-    
-    # Criamos colunas dentro do painel para organizar os seletores
-    cols_config = st.columns(5)
-    for i in range(2, 12):
-        id_conta = f"MKR {i}"
-        with cols_config[(i - 2) % 5]:
-            # Seletor de horas direto na tela
-            config_horas[id_conta] = st.number_input(
-                f"Fazendeiro MKR {i}", 
-                min_value=1, 
-                max_value=12, 
-                value=config_horas.get(id_conta, 3), 
-                step=1,
-                key=f"cfg_{id_conta}"
-            )
-
-st.markdown("<hr style='border: 0.5px solid #30363d; margin-bottom: 30px;'>", unsafe_allow_html=True)
-
-# 7. Lista de Contas baseada na configuração dinâmica do site
-contas = []
-for i in range(2, 12):
-    id_conta = f"MKR {i}"
-    horas = config_horas[id_conta]
-    label = f"{horas}h 00m"
-    contas.append({
-        "id": id_conta, 
-        "nome": f"Fazendeiro {id_conta}", 
-        "duracao_seg": horas * 3600, 
-        "label": label
-    })
-
 if 'beep_played' not in st.session_state:
-    st.session_state.beep_played = {c["id"]: False for c in contas}
+    st.session_state.beep_played = {}
 
 tocar_bip = False
 
-# 8. Layout 5 colunas para os Timers
-cols = st.columns(5)
-
-for idx, conta in enumerate(contas):
-    id_conta = conta["id"]
-    
-    with cols[idx % 5]:
-        texto_timer = "00:00:00"
-        texto_termino = "Termina às: --:--" 
-        cor_timer = "#484f58"
-        card_class = "timer-card"
+# 6. Layout Dinâmico em 5 colunas para os Timers Atuais
+if len(lista_contas) > 0:
+    cols = st.columns(5)
+    for idx, conta in enumerate(lista_contas):
+        id_conta = conta["id"]
+        nome_conta = conta["nome"]
+        minutos = conta["minutos"]
         
-        if id_conta in global_timers:
-            tempo_fim = global_timers[id_conta]
-            restante = tempo_fim - agora_br()
-            segundos_restantes = restante.total_seconds()
+        # Formata o label do ciclo (ex: se for 180 min, mostra 3h 00m)
+        h_ciclo, m_ciclo = divmod(minutos, 60)
+        label_ciclo = f"{h_ciclo}h {m_ciclo:02d}m"
+        
+        with cols[idx % 5]:
+            texto_timer = "00:00:00"
+            texto_termino = "Termina às: --:--" 
+            cor_timer = "#484f58"
+            card_class = "timer-card"
             
-            if segundos_restantes > 0:
-                h, r = divmod(int(segundos_restantes), 3600)
-                m, s = divmod(r, 60)
-                texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
-                texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
+            if id_conta in global_timers:
+                tempo_fim = global_timers[id_conta]
+                restante = tempo_fim - agora_br()
+                segundos_restantes = restante.total_seconds()
                 
-                # LÓGICA DE CORES DINÂMICA (Metade do tempo laranja, Menos de 1h vermelho)
-                duracao_total = conta["duracao_seg"]
-                if segundos_restantes > (duracao_total / 2):
-                    cor_timer = "#58a6ff" # Azul
-                elif segundos_restantes > 3600:
-                    cor_timer = "#ffa500" # Laranja
+                duracao_seg = minutos * 60
+                if segundos_restantes > 0:
+                    h, r = divmod(int(segundos_restantes), 3600)
+                    m, s = divmod(r, 60)
+                    texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
+                    texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
+                    
+                    # Cores proporcionais
+                    if segundos_restantes > (duracao_seg / 2):
+                        cor_timer = "#58a6ff" # Azul
+                    elif segundos_restantes > 3600:
+                        cor_timer = "#ffa500" # Laranja
+                    else:
+                        cor_timer = "#ff4b4b" # Vermelho
                 else:
-                    cor_timer = "#ff4b4b" # Vermelho
-            else:
-                texto_timer = "PRONTO!"
-                texto_termino = "Termina às: AGORA"
-                cor_timer = "#3fb950" 
-                card_class = "timer-card timer-ready" 
-                
-                if not st.session_state.beep_played.get(id_conta, False):
-                    tocar_bip = True
-                    st.session_state.beep_played[id_conta] = True
-        
-        st.markdown(f"""
-            <div class="{card_class}">
-                <div class="account-label">{conta["nome"]}</div>
-                <div class="cycle-label">Ciclo: {conta["label"]}</div>
-                <div class="end-time-label">{texto_termino}</div>
-                <div class="timer-text" style="color: {cor_timer};">{texto_timer}</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button(f"Iniciar {id_conta}", key=f"btn_{id_conta}", use_container_width=True):
-            global_timers[id_conta] = agora_br() + timedelta(seconds=conta["duracao_seg"])
-            st.session_state.beep_played[id_conta] = False
-            st.rerun()
+                    texto_timer = "PRONTO!"
+                    texto_termino = "Termina às: AGORA"
+                    cor_timer = "#3fb950" 
+                    card_class = "timer-card timer-ready" 
+                    
+                    if not st.session_state.beep_played.get(id_conta, False):
+                        tocar_bip = True
+                        st.session_state.beep_played[id_conta] = True
+            
+            st.markdown(f"""
+                <div class="{card_class}">
+                    <div class="account-label">{nome_conta}</div>
+                    <div class="cycle-label">Ciclo: {label_ciclo}</div>
+                    <div class="end-time-label">{texto_termino}</div>
+                    <div class="timer-text" style="color: {cor_timer};">{texto_timer}</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            if st.button(f"Iniciar", key=f"btn_{id_conta}", use_container_width=True):
+                global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
+                st.session_state.beep_played[id_conta] = False
+                st.rerun()
+else:
+    st.info("Nenhum cronômetro cadastrado. Adicione um abaixo!")
 
-# 9. Sistema de Áudio (JavaScript)
+# ==========================================
+# 7. PAINEL DE CONFIGURAÇÃO NA PARTE DE BAIXO
+# ==========================================
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("---")
+st.subheader("⚙️ Gerenciar Cronômetros (Adicionar, Renomear, Ajustar Minutos e Deletar)")
+
+# Adicionar Novo Cronômetro
+with st.form("form_adicionar", clear_on_submit=True):
+    st.write("**Adicionar Novo Cronômetro**")
+    col_add1, col_add2, col_add3 = st.columns([2, 2, 1])
+    with col_add1:
+        novo_nome = st.text_input("Nome do Personagem / Fazendeiro", placeholder="Ex: Fazendeiro MKR 12")
+    with col_add2:
+         novos_minutos = st.number_input("Duração em Minutos", min_value=1, max_value=1440, value=180, step=1)
+    with col_add3:
+        st.write("")
+        st.write("")
+        btn_adicionar = st.form_submit_button("➕ Adicionar")
+        
+    if btn_adicionar:
+        if novo_nome.strip():
+            novo_id = f"custom_{time.time()}"
+            lista_contas.append({
+                "id": novo_id,
+                "nome": novo_nome.strip(),
+                "minutos": int(novos_minutos)
+            })
+            st.success(f"'{novo_nome}' adicionado com sucesso!")
+            st.rerun()
+        else:
+            st.error("Digite um nome válido.")
+
+st.write("---")
+st.write("**Editar ou Deletar Cronômetros Existentes**")
+
+# Listagem para edição e exclusão individual
+for idx, conta in enumerate(list(lista_contas)):
+    id_c = conta["id"]
+    col_e1, col_e2, col_e3, col_e4 = st.columns([3, 2, 1, 1])
+    
+    with col_e1:
+        novo_nome_val = st.text_input("Nome", value=conta["nome"], key=f"edit_nome_{id_c}", label_visibility="collapsed")
+    with col_e2:
+        novo_min_val = st.number_input("Minutos", min_value=1, max_value=1440, value=conta["minutos"], step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
+    with col_e3:
+        btn_salvar = st.button("💾 Salvar", key=f"save_{id_c}")
+    with col_e4:
+        btn_deletar = st.button("🗑️ Deletar", key=f"del_{id_c}")
+        
+    if btn_salvar:
+        conta["nome"] = novo_nome_val
+        conta["minutos"] = int(novo_min_val)
+        st.success("Atualizado!")
+        st.rerun()
+        
+    if btn_deletar:
+        lista_contas.remove(conta)
+        if id_c in global_timers:
+            del global_timers[id_c]
+        st.warning(f"Cronômetro removido.")
+        st.rerun()
+
+# 8. Sistema de Áudio (JavaScript)
 if tocar_bip:
     uid = time.time()
     codigo_js = f"""
@@ -202,6 +248,6 @@ if tocar_bip:
     """
     components.html(codigo_js, height=0, width=0)
 
-# 10. Refresh
+# 9. Refresh
 time.sleep(1)
 st.rerun()
