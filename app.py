@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO E ROBUSTO (Alinhamento perfeito e tema escuro)
+# 3. CSS COMPLETO E DEFINITIVO (Isolado e sem quebrar os grids do topo)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -62,7 +62,7 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    /* Encaixe perfeito do botão Iniciar no topo */
+    /* Encaixe perfeito do botão Iniciar dentro do cartão no topo */
     .tucked-btn {
         margin-top: -50px !important;
         margin-bottom: 15px !important;
@@ -90,10 +90,9 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    /* Alinhamento milimétrico automático das colunas de gerenciamento */
-    div[data-testid="column"] {
-        display: flex;
-        align-items: flex-end;
+    /* Alinhamento milimétrico exclusivo para os botões de Salvar/Deletar na parte inferior */
+    .sync-btn {
+        margin-top: 26px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -197,6 +196,7 @@ with col_center:
             with col_a2:
                 novos_minutos = st.number_input("Minutos", min_value=1, max_value=1440, value=180, step=1)
             with col_a3:
+                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
                 btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
                 
             if btn_adicionar:
@@ -226,17 +226,21 @@ with col_center:
             with c_min:
                 novo_min_val = st.number_input("Min", min_value=1, max_value=1440, value=int(conta["minutos"]), step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
             with c_salvar:
+                st.markdown('<div class="sync-btn">', unsafe_allow_html=True)
                 if st.button("Salvar", key=f"save_{id_c}", use_container_width=True):
                     conta["nome"] = novo_nome_val
                     conta["minutos"] = int(novo_min_val)
                     st.success("Salvo!")
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
             with c_del:
+                st.markdown('<div class="sync-btn">', unsafe_allow_html=True)
                 if st.button("Deletar", key=f"del_{id_c}", use_container_width=True):
                     st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
                     if id_c in st.session_state.global_timers:
                         del st.session_state.global_timers[id_c]
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
 
 # 7. Sistema de Áudio (JavaScript)
 if tocar_bip:
