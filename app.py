@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM BORDAS ESCURECIDAS NOS INPUTS DE TEXTO E NÚMERO
+# 3. CSS COMPLETO COM BORDAS TOTALMENTE ESCURECIDAS NOS INPUTS
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -49,14 +49,15 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
     }
     
-    /* ESCURECER FUNDO E BORDAS DE TODOS OS INPUTS (TEXTO E NÚMERO) */
-    div[data-testid="stTextInput"] div[data-baseweb="base-input"],
-    div[data-testid="stNumberInput"] div[data-baseweb="base-input"],
-    div[data-baseweb="input"],
+    /* ESCURECER TOTALMENTE AS BORDAS E FUNDOS DOS INPUTS (TEXTO E NÚMERO) */
+    .stTextInput > div > div, 
+    .stNumberInput > div > div,
     div[data-baseweb="base-input"],
+    div[data-baseweb="input"],
     div[data-baseweb="spinbutton"] {
         background-color: #21262d !important;
         border: 1px solid #30363d !important;
+        box-shadow: none !important;
     }
     
     input, textarea {
@@ -66,8 +67,9 @@ st.markdown("""
     }
     
     /* Foco sutil em azul ao clicar no input */
-    div[data-baseweb="base-input"]:focus-within, 
-    div[data-baseweb="input"]:focus-within {
+    .stTextInput > div > div:focus-within, 
+    .stNumberInput > div > div:focus-within,
+    div[data-baseweb="base-input"]:focus-within {
         border-color: #58a6ff !important;
         box-shadow: 0 0 0 1px #58a6ff !important;
     }
