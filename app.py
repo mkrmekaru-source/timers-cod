@@ -23,7 +23,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS ORGANIZADO
+# 3. CSS PROFISSIONAL COM ISOLAMENTO DE SEÇÕES
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -60,8 +60,8 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    /* ESTILO APLICADO APENAS AOS BOTÕES DO TOPO (Dentro dos cards) */
-    .timer-btn-wrapper [data-testid="stButton"] {
+    /* Botões dos cartões no topo */
+    [data-testid="stButton"] {
         margin-top: -75px !important;
         padding: 0 15% !important;
         position: relative;
@@ -70,7 +70,7 @@ st.markdown("""
         justify-content: center;
     }
 
-    .timer-btn-wrapper [data-testid="stButton"] button { 
+    [data-testid="stButton"] button { 
         background-color: #21262d !important;
         color: white !important;
         border: 1px solid #30363d !important;
@@ -80,10 +80,27 @@ st.markdown("""
         width: 100% !important;
     }
     
-    .timer-btn-wrapper [data-testid="stButton"] button:hover {
+    [data-testid="stButton"] button:hover {
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
+    }
+
+    /* ISOLAMENTO: Reseta o estilo para qualquer botão que esteja após o marcador da seção de configuração */
+    #config-section ~ * [data-testid="stButton"],
+    #config-section ~ [data-testid="stVerticalBlock"] [data-testid="stButton"],
+    #config-section ~ [data-testid="column"] [data-testid="stButton"] {
+        margin-top: 0px !important;
+        padding: 0px !important;
+    }
+    
+    #config-section ~ * [data-testid="stButton"] button,
+    #config-section ~ [data-testid="stVerticalBlock"] [data-testid="stButton"] button,
+    #config-section ~ [data-testid="column"] [data-testid="stButton"] button {
+        background-color: #21262d !important;
+        color: #ffffff !important;
+        height: 40px !important;
+        width: 100% !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -157,20 +174,19 @@ def render_timer_grid():
                     </div>
                 """, unsafe_allow_html=True)
                 
-                st.markdown('<div class="timer-btn-wrapper">', unsafe_allow_html=True)
                 if st.button(f"Iniciar {nome_conta}", key=f"btn_{id_conta}", use_container_width=True):
                     st.session_state.global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
                     st.session_state.beep_played[id_conta] = False
                     st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.info("Nenhum cronômetro cadastrado. Adicione um abaixo!")
 
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Botões à Direita)
+# 6. MARCADOR DE ISOLAMENTO E PAINEL DE CONFIGURAÇÃO
 # ==========================================
+st.markdown('<div id="config-section"></div>', unsafe_allow_html=True)
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
 st.subheader("⚙️ Adicionar Novo Cronômetro")
@@ -203,7 +219,7 @@ st.subheader("✏️ Gerenciar e Deletar Cronômetros Existentes")
 
 for idx, conta in enumerate(list(st.session_state.lista_contas)):
     id_c = conta["id"]
-    # Ordem exata nas colunas: [Nome] [Minutos] [Salvar] [Deletar]
+    # Colunas: [Nome] [Minutos] [Salvar] [Deletar] (Botões à direita)
     col_e1, col_e2, col_e3, col_e4 = st.columns([3, 2, 1, 1])
     
     with col_e1:
