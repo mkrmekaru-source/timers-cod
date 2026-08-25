@@ -6,16 +6,20 @@ import streamlit.components.v1 as components
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. CACHE PERSISTENTE (V2 para limpar a memória antiga e resolver o erro)
+# 2. CACHE PERSISTENTE V4 (Guarda os tempos finais e as durações customizadas no servidor)
 @st.cache_resource
-def get_global_timers_v2():
-    return {}
+def get_global_data():
+    return {
+        "timers": {},
+        "horas": {f"MKR {i}": 3 for i in range(2, 12)} # Padrão inicial: 3 horas para todos
+    }
 
-global_timers = get_global_timers_v2()
+dados_globais = get_global_data()
+global_timers = dados_globais["timers"]
+config_horas = dados_globais["horas"]
 
-# 3. Função de Tempo (Horário de Brasília) sem conflito de formato
+# 3. Função de Tempo (Horário de Brasília)
 def agora_br():
-    # Pega a hora universal (UTC) do servidor e diminui 3 horas
     return datetime.utcnow() - timedelta(hours=3)
 
 # 4. CSS
@@ -79,29 +83,57 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    .logo-spacer { margin-bottom: 40px; }
+    .logo-spacer { margin-bottom: 30px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 5. Logo
+# 5. Logo e Cabeçalho
 col_l, col_m, col_r = st.columns([1, 2, 1])
 with col_m:
     st.image("1679019533_0X730X6C0X6F0X67.png", use_container_width=True)
+
 st.markdown('<div class="logo-spacer"></div>', unsafe_allow_html=True)
 
-# 6. Lista de Contas (Todos com 3 horas)
+# 6. PAINEL DE CONFIGURAÇÃO DE HORAS NO SITE
+with st.expander("⚙️ Configurar Horas dos Ciclos (Clique para abrir/fechar)"):
+    st.write("Ajuste quantas horas cada fazendeiro vai durar antes de dar o alarme:")
+    
+    # Criamos colunas dentro do painel para organizar os seletores
+    cols_config = st.columns(5)
+    for i in range(2, 12):
+        id_conta = f"MKR {i}"
+        with cols_config[(i - 2) % 5]:
+            # Seletor de horas direto na tela
+            config_horas[id_conta] = st.number_input(
+                f"Fazendeiro MKR {i}", 
+                min_value=1, 
+                max_value=12, 
+                value=config_horas.get(id_conta, 3), 
+                step=1,
+                key=f"cfg_{id_conta}"
+            )
+
+st.markdown("<hr style='border: 0.5px solid #30363d; margin-bottom: 30px;'>", unsafe_allow_html=True)
+
+# 7. Lista de Contas baseada na configuração dinâmica do site
 contas = []
 for i in range(2, 12):
-    duracao_min = 180
-    label = "3h 00m"
-    contas.append({"id": f"MKR {i}", "nome": f"Fazendeiro MKR {i}", "duracao_seg": duracao_min * 60, "label": label})
+    id_conta = f"MKR {i}"
+    horas = config_horas[id_conta]
+    label = f"{horas}h 00m"
+    contas.append({
+        "id": id_conta, 
+        "nome": f"Fazendeiro {id_conta}", 
+        "duracao_seg": horas * 3600, 
+        "label": label
+    })
 
 if 'beep_played' not in st.session_state:
     st.session_state.beep_played = {c["id"]: False for c in contas}
 
 tocar_bip = False
 
-# 7. Layout 5 colunas
+# 8. Layout 5 colunas para os Timers
 cols = st.columns(5)
 
 for idx, conta in enumerate(contas):
@@ -124,13 +156,14 @@ for idx, conta in enumerate(contas):
                 texto_timer = f"{h:02d}:{m:02d}:{s:02d}"
                 texto_termino = f"Termina às: {tempo_fim.strftime('%H:%M')}"
                 
-                # LÓGICA DE CORES
-                if segundos_restantes > 7200:
-                    cor_timer = "#58a6ff" 
+                # LÓGICA DE CORES DINÂMICA (Metade do tempo laranja, Menos de 1h vermelho)
+                duracao_total = conta["duracao_seg"]
+                if segundos_restantes > (duracao_total / 2):
+                    cor_timer = "#58a6ff" # Azul
                 elif segundos_restantes > 3600:
-                    cor_timer = "#ffa500" 
-                else: 
-                    cor_timer = "#ff4b4b" 
+                    cor_timer = "#ffa500" # Laranja
+                else:
+                    cor_timer = "#ff4b4b" # Vermelho
             else:
                 texto_timer = "PRONTO!"
                 texto_termino = "Termina às: AGORA"
@@ -155,7 +188,7 @@ for idx, conta in enumerate(contas):
             st.session_state.beep_played[id_conta] = False
             st.rerun()
 
-# 8. Sistema de Áudio (JavaScript)
+# 9. Sistema de Áudio (JavaScript)
 if tocar_bip:
     uid = time.time()
     codigo_js = f"""
@@ -169,6 +202,6 @@ if tocar_bip:
     """
     components.html(codigo_js, height=0, width=0)
 
-# 9. Refresh
+# 10. Refresh
 time.sleep(1)
 st.rerun()
