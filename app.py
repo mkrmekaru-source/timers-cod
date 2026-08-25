@@ -25,7 +25,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS PROFISSIONAL (Mantém o visual impecável dos cards no topo)
+# 3. CSS PROFISSIONAL
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -168,60 +168,61 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO EM TABELA MODERNA
+# 6. PAINEL DE CONFIGURAÇÃO (Compacto e Centralizado)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
-st.subheader("⚙️ Gerenciar Cronômetros (Adicionar, Editar e Deletar)")
-st.write("📝 **Como usar:** Edite o nome ou os minutos diretamente nas células da tabela. Para **adicionar** um novo, clique no botão **`+`** na última linha ou digite embaixo. Para **deletar**, selecione a linha desejada e clique na lixeira.")
 
-# Converte a lista atual em um DataFrame para a tabela interativa
-df_data = pd.DataFrame([{
-    "Nome": c["nome"],
-    "Minutos": int(c["minutos"]),
-    "_id": c["id"]
-} for c in st.session_state.lista_contas])
+# Colunas para centralizar e diminuir a largura do painel de gerenciamento
+col_l, col_center, col_r = st.columns([1, 2.2, 1])
 
-edited_df = st.data_editor(
-    df_data[["Nome", "Minutos"]],
-    num_rows="dynamic",
-    use_container_width=True,
-    key="tabela_gerenciamento"
-)
+with col_center:
+    st.subheader("⚙️ Gerenciar Cronômetros")
+    st.markdown("<div style='font-size: 13px; color: #8b949e; margin-bottom: 10px;'>Edite nome/minutos, adicione com o botão <b>+</b> ou delete selecionando a linha.</div>", unsafe_allow_html=True)
 
-col_b1, col_b2, col_b3 = st.columns([1, 2, 1])
-with col_b2:
-    if st.button("💾 Salvar Alterações na Tabela", use_container_width=True):
-        nova_lista = []
-        for idx, row in edited_df.iterrows():
-            nome = str(row["Nome"]).strip()
-            if not nome or nome == "nan":
-                continue
-            try:
-                minutos = int(row["Minutos"])
-            except:
-                minutos = 180
-            
-            # Mantém o ID antigo se a linha já existia, ou cria um novo ID se foi adicionada agora
-            if idx < len(st.session_state.lista_contas):
-                conta_id = st.session_state.lista_contas[idx]["id"]
-            else:
-                conta_id = f"custom_{time.time()}_{idx}"
+    df_data = pd.DataFrame([{
+        "Nome": c["nome"],
+        "Minutos": int(c["minutos"]),
+        "_id": c["id"]
+    } for c in st.session_state.lista_contas])
+
+    with st.container(border=True):
+        edited_df = st.data_editor(
+            df_data[["Nome", "Minutos"]],
+            num_rows="dynamic",
+            use_container_width=True,
+            height=280,
+            key="tabela_gerenciamento"
+        )
+        
+        if st.button("💾 Salvar Alterações na Tabela", use_container_width=True):
+            nova_lista = []
+            for idx, row in edited_df.iterrows():
+                nome = str(row["Nome"]).strip()
+                if not nome or nome == "nan":
+                    continue
+                try:
+                    minutos = int(row["Minutos"])
+                except:
+                    minutos = 180
                 
-            nova_lista.append({
-                "id": conta_id,
-                "nome": nome,
-                "minutos": minutos
-            })
+                if idx < len(st.session_state.lista_contas):
+                    conta_id = st.session_state.lista_contas[idx]["id"]
+                else:
+                    conta_id = f"custom_{time.time()}_{idx}"
+                    
+                nova_lista.append({
+                    "id": conta_id,
+                    "nome": nome,
+                    "minutos": minutos
+                })
+                
+            st.session_state.lista_contas = nova_lista
+            valid_ids = [c["id"] for c in nova_lista]
+            st.session_state.global_timers = {k: v for k, v in st.session_state.global_timers.items() if k in valid_ids}
             
-        st.session_state.lista_contas = nova_lista
-        
-        # Remove cronômetros ativos de contas que foram deletadas
-        valid_ids = [c["id"] for c in nova_lista]
-        st.session_state.global_timers = {k: v for k, v in st.session_state.global_timers.items() if k in valid_ids}
-        
-        st.success("Tabela salva com sucesso! Os cronômetros foram atualizados.")
-        st.rerun()
+            st.success("Salvo com sucesso!")
+            st.rerun()
 
 # 7. Sistema de Áudio (JavaScript)
 if tocar_bip:
