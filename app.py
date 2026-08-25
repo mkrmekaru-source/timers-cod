@@ -23,7 +23,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS PARA ALINHAMENTO PERFEITO NA PARTE DE BAIXO
+# 3. CSS PARA ALINHAMENTO PERFEITO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -85,9 +85,9 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    /* Alinhamento exato para os botões de Salvar e Deletar nas linhas */
-    .row-widget.stButton {
-        margin-top: 0px !important;
+    /* Alinha perfeitamente os botões de edição da tabela inferior com os inputs */
+    div[data-testid="column"] .stButton {
+        margin-top: 27px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -171,7 +171,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado)
+# 6. PAINEL DE CONFIGURAÇÃO (Perfeitamente Alinhado)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
