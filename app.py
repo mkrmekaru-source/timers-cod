@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COM ALINHAMENTO MILIMÉTRICO E TEMA ESCURO UNIVERSAL
+# 3. CSS COMPLETO E DEFINITIVO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -89,9 +89,9 @@ st.markdown("""
         background-color: #30363d !important;
     }
 
-    /* Alinhamento exato para compensar o espaço do label dos inputs */
+    /* Alinhamento perfeito dos botões de ação na seção inferior */
     .action-btn {
-        margin-top: 28px !important;
+        margin-top: 15px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
