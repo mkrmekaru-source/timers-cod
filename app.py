@@ -24,7 +24,7 @@ if "lista_contas" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO E DEFINITIVO (Isolado e sem quebrar os grids do topo)
+# 3. CSS COMPLETO E DEFINITIVO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -34,10 +34,10 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #ffffff; }
     .block-container { padding-top: 0rem; padding-bottom: 3rem; }
     
-    /* Cartões do Topo */
+    /* Cartões do Topo com espaço inferior otimizado para o botão */
     .timer-card {
         background-color: #161b22;
-        padding: 20px 15px 70px 15px;
+        padding: 20px 15px 85px 15px;
         border-radius: 12px;
         border: 1px solid #30363d;
         text-align: center;
@@ -62,9 +62,9 @@ st.markdown("""
         font-family: 'Courier New', Courier, monospace; 
     }
     
-    /* Encaixe perfeito do botão Iniciar dentro do cartão no topo */
+    /* Encaixe perfeito do botão Iniciar dentro do cartão */
     .tucked-btn {
-        margin-top: -50px !important;
+        margin-top: -65px !important;
         margin-bottom: 15px !important;
         padding: 0 10% !important;
         position: relative;
@@ -88,11 +88,6 @@ st.markdown("""
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
-    }
-
-    /* Alinhamento milimétrico exclusivo para os botões de Salvar/Deletar na parte inferior */
-    .sync-btn {
-        margin-top: 26px !important;
     }
 
     .logo-spacer { margin-bottom: 40px; }
@@ -178,7 +173,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Perfeitamente Alinhado)
+# 6. PAINEL DE CONFIGURAÇÃO (Alinhado Milimetricamente)
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -226,21 +221,20 @@ with col_center:
             with c_min:
                 novo_min_val = st.number_input("Min", min_value=1, max_value=1440, value=int(conta["minutos"]), step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
             with c_salvar:
-                st.markdown('<div class="sync-btn">', unsafe_allow_html=True)
+                # Espaçador vertical exato para compensar o label dos inputs e alinhar o botão perfeitamente
+                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
                 if st.button("Salvar", key=f"save_{id_c}", use_container_width=True):
                     conta["nome"] = novo_nome_val
                     conta["minutos"] = int(novo_min_val)
                     st.success("Salvo!")
                     st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
             with c_del:
-                st.markdown('<div class="sync-btn">', unsafe_allow_html=True)
+                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
                 if st.button("Deletar", key=f"del_{id_c}", use_container_width=True):
                     st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
                     if id_c in st.session_state.global_timers:
                         del st.session_state.global_timers[id_c]
                     st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
 
 # 7. Sistema de Áudio (JavaScript)
 if tocar_bip:
