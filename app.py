@@ -54,11 +54,14 @@ if "global_timers" not in st.session_state:
             except:
                 pass
 
+if "tocar_som" not in st.session_state:
+    st.session_state.tocar_som = False
+
 # Função de Tempo (Horário de Brasília)
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM LETRAS BRANCAS NÍVEIS MÁXIMOS (INCLUINDO PLACEHOLDERS)
+# 3. CSS COMPLETO COM TEMA ESCURO PROFUNDO E LIMPO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -116,7 +119,6 @@ st.markdown("""
         -webkit-text-fill-color: #ffffff !important;
     }
     
-    /* FORÇA OS PLACEHOLDERS E AVISOS (COMO "Press Enter to apply") A FICAREM EM BRANCO NÍVEL MÁXIMO */
     input::placeholder, textarea::placeholder, 
     div[data-baseweb="base-input"] *, div[data-baseweb="input"] * {
         color: #ffffff !important;
@@ -165,8 +167,6 @@ st.markdown('<div class="logo-spacer"></div>', unsafe_allow_html=True)
 if 'beep_played' not in st.session_state:
     st.session_state.beep_played = {}
 
-tocar_bip = False
-
 # 5. FRAGMENTO DOS TIMERS
 @st.fragment(run_every=1)
 def render_timer_grid():
@@ -212,6 +212,7 @@ def render_timer_grid():
                         
                         if not st.session_state.beep_played.get(id_conta, False):
                             st.session_state.beep_played[id_conta] = True
+                            st.session_state.tocar_som = True
                 
                 container_class = "container-ready" if is_ready else ""
                 with st.container(border=True):
@@ -326,16 +327,16 @@ with col_center:
             st.success("Painel resetado para o padrão com sucesso!")
             st.rerun()
 
-# 7. Sistema de Áudio (JavaScript)
-if tocar_bip:
-    uid = time.time()
-    codigo_js = f"""
+# 7. Sistema de Áudio Automático (JavaScript)
+if st.session_state.get("tocar_som", False):
+    codigo_js = """
     <script>
         var url_som = "https://actions.google.com/sounds/v1/alarms/beep_short.ogg";
-        for (var i = 0; i < 4; i++) {{
+        for (var i = 0; i < 4; i++) {
             var audio = new Audio(url_som);
             audio.play();
-        }}
+        }
     </script>
     """
     components.html(codigo_js, height=0, width=0)
+    st.session_state.tocar_som = False
