@@ -58,7 +58,7 @@ if "global_timers" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM REMOÇÃO DO POPUP "PRESS ENTER" E TEMA ESCURO PROFUNDO
+# 3. CSS COMPLETO COM SUPRESSÃO TOTAL DE POPOVERS E TEMA ESCURO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -83,9 +83,12 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
     }
     
-    /* REMOVE COMPLETAMENTE O POPUP "Press Enter to apply" */
-    div[data-baseweb="popover"], div[data-baseweb="tooltip"], [role="tooltip"] {
+    /* BLOQUEIO TOTAL E DEFINITIVO DE QUALQUER POPOVER / TOOLTIP DO INPUT */
+    div[data-baseweb="popover"], div[data-baseweb="tooltip"], [role="tooltip"], div[id*="popover"] {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
     }
     
     /* ESCURECER TOTALMENTE O EXPANDER (ZONA DE PERIGO) E REMOVER O BRANCO */
