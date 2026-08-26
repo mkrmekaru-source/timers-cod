@@ -58,7 +58,7 @@ if "global_timers" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM TEMA ESCURO PROFUNDO E SEM BORDAS CLARAS
+# 3. CSS COMPLETO COM TEMA ESCURO PROFUNDO E REMOÇÃO DE QUALQUER BRANCO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -81,6 +81,24 @@ st.markdown("""
         background-color: rgba(63, 185, 80, 0.05) !important;
         border: 2px solid #3fb950 !important;
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
+    }
+    
+    /* ESCURECER TOTALMENTE O EXPANDER (ZONA DE PERIGO) E REMOVER O BRANCO */
+    [data-testid="stExpander"] {
+        background-color: #161b22 !important;
+        border: 1px solid #30363d !important;
+        border-radius: 12px !important;
+    }
+    [data-testid="stExpander"] details {
+        background-color: #161b22 !important;
+        border: none !important;
+    }
+    [data-testid="stExpander"] summary {
+        background-color: #161b22 !important;
+        color: #ffffff !important;
+    }
+    [data-testid="stExpander"] summary svg {
+        fill: #ffffff !important;
     }
     
     /* ESCURECER TOTALMENTE AS BORDAS E FUNDOS DOS INPUTS */
@@ -286,6 +304,19 @@ with col_center:
                     salvar_dados()
                     st.rerun()
 
+    # Zona de Perigo protegida contra cliques acidentais (Totalmente escura)
+    st.markdown("<br>", unsafe_allow_html=True)
+    with st.expander("⚠️ Zona de Perigo (Configurações Avançadas)"):
+        st.warning("Atenção: Restaurar o padrão apagará todos os cronômetros personalizados e ajustes atuais.")
+        confirmar_reset = st.checkbox("Sim, eu tenho certeza que desejo resetar tudo para o padrão")
+        
+        if st.button("🔄 Restaurar Padrão de Fábrica (2 a 11)", disabled=not confirmar_reset):
+            if os.path.exists(ARQUIVO_DADOS):
+                os.remove(ARQUIVO_DADOS)
+            st.session_state.clear()
+            st.success("Painel resetado para o padrão com sucesso!")
+            st.rerun()
+
 # 7. Sistema de Áudio (JavaScript)
 if tocar_bip:
     uid = time.time()
@@ -299,28 +330,3 @@ if tocar_bip:
     </script>
     """
     components.html(codigo_js, height=0, width=0)
-
-
-
-
-
-
-# Zona de Perigo protegida contra cliques acidentais
-st.markdown("<br><br>", unsafe_allow_html=True)
-with st.expander("⚠️ Zona de Perigo (Configurações Avançadas)"):
-  st.warning(
-      "Atenção: Restaurar o padrão apagará todos os cronômetros personalizados"
-      " e ajustes atuais."
-  )
-  confirmar_reset = st.checkbox(
-      "Sim, eu tenho certeza que desejo resetar tudo para o padrão"
-  )
-
-  if st.button(
-      "🔄 Restaurar Padrão de Fábrica (2 a 11)", disabled=not confirmar_reset
-  ):
-    if os.path.exists(ARQUIVO_DADOS):
-      os.remove(ARQUIVO_DADOS)  # Apaga o arquivo salvo
-    st.session_state.clear()  # Limpa a memória da sessão
-    st.success("Painel resetado para o padrão com sucesso!")
-    st.rerun()
