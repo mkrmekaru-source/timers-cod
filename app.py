@@ -58,7 +58,7 @@ if "global_timers" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM O POPOVER MOVIDO PARA BAIXO E TEMA ESCURO
+# 3. CSS COMPLETO COM TEMA ESCURO PROFUNDO E LIMPO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -83,18 +83,6 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
     }
     
-    /* MOVE O AVISO "Press Enter to apply" PARA BAIXO DA CAIXA (FORA DO CAMPO DE VISÃO) */
-    div[data-baseweb="popover"], [role="tooltip"] {
-        transform: translateY(45px) !important;
-        background-color: #21262d !important;
-        color: #ffffff !important;
-        border: 1px solid #30363d !important;
-        border-radius: 6px !important;
-    }
-    div[data-baseweb="popover"] *, [role="tooltip"] * {
-        color: #ffffff !important;
-    }
-    
     /* ESCURECER TOTALMENTE O EXPANDER (ZONA DE PERIGO) E REMOVER O BRANCO */
     [data-testid="stExpander"] {
         background-color: #161b22 !important;
@@ -115,10 +103,8 @@ st.markdown("""
     
     /* ESCURECER TOTALMENTE AS BORDAS E FUNDOS DOS INPUTS */
     .stTextInput > div > div, 
-    .stNumberInput > div > div,
     div[data-baseweb="base-input"],
-    div[data-baseweb="input"],
-    div[data-baseweb="spinbutton"] {
+    div[data-baseweb="input"] {
         background-color: #21262d !important;
         border: 1px solid #30363d !important;
         box-shadow: none !important;
@@ -131,21 +117,9 @@ st.markdown("""
     }
     
     .stTextInput > div > div:focus-within, 
-    .stNumberInput > div > div:focus-within,
     div[data-baseweb="base-input"]:focus-within {
         border-color: #58a6ff !important;
         box-shadow: 0 0 0 1px #58a6ff !important;
-    }
-    
-    div.stNumberInput button {
-        background-color: #21262d !important;
-        color: #ffffff !important;
-        border-color: #30363d !important;
-    }
-    div.stNumberInput button:hover {
-        background-color: #30363d !important;
-        color: #58a6ff !important;
-        border-color: #58a6ff !important;
     }
     
     /* PADRONIZAÇÃO DE TODOS OS BOTÕES NO TEMA ESCURO */
@@ -268,18 +242,26 @@ with col_center:
         with col_a1:
             novo_nome = st.text_input("Nome do Fazendeiro", placeholder="Ex: MKR 12", key="input_add_nome")
         with col_a2:
-            novos_minutos = st.number_input("Minutos", min_value=1, max_value=1440, value=180, step=1, key="input_add_min")
+            novos_minutos_str = st.text_input("Minutos", value="180", key="input_add_min")
         with col_a3:
             st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
             btn_adicionar = st.button("➕ Adicionar", key="btn_add_novo", use_container_width=True)
             
         if btn_adicionar:
             if novo_nome.strip():
+                try:
+                    novos_minutos = int(novos_minutos_str)
+                    if novos_minutos <= 0:
+                        raise ValueError()
+                except ValueError:
+                    st.error("Digite um número válido de minutos.")
+                    st.stop()
+                
                 novo_id = f"custom_{time.time()}"
                 st.session_state.lista_contas.append({
                     "id": novo_id,
                     "nome": novo_nome.strip(),
-                    "minutos": int(novos_minutos)
+                    "minutos": novos_minutos
                 })
                 salvar_dados()
                 st.success(f"'{novo_nome}' adicionado!")
@@ -299,11 +281,19 @@ with col_center:
             with c_nome:
                 novo_nome_val = st.text_input("Nome", value=conta["nome"], key=f"edit_nome_{id_c}", label_visibility="collapsed")
             with c_min:
-                novo_min_val = st.number_input("Min", min_value=1, max_value=1440, value=int(conta["minutos"]), step=1, key=f"edit_min_{id_c}", label_visibility="collapsed")
+                novo_min_val_str = st.text_input("Min", value=str(conta["minutos"]), key=f"edit_min_{id_c}", label_visibility="collapsed")
             with c_salvar:
                 if st.button("Salvar", key=f"save_{id_c}", use_container_width=True):
+                    try:
+                        novo_min_val = int(novo_min_val_str)
+                        if novo_min_val <= 0:
+                            raise ValueError()
+                    except ValueError:
+                        st.error("Minutos inválidos.")
+                        st.stop()
+                    
                     conta["nome"] = novo_nome_val
-                    conta["minutos"] = int(novo_min_val)
+                    conta["minutos"] = novo_min_val
                     salvar_dados()
                     st.success("Salvo!")
                     st.rerun()
