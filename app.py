@@ -58,7 +58,7 @@ if "global_timers" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM TEMA ESCURO PROFUNDO E LIMPO
+# 3. CSS COMPLETO COM LETRAS BRANCAS NOS INPUTS E TEMA ESCURO PROFUNDO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -101,7 +101,7 @@ st.markdown("""
         fill: #ffffff !important;
     }
     
-    /* ESCURECER TOTALMENTE AS BORDAS E FUNDOS DOS INPUTS */
+    /* ESCURECER TOTALMENTE AS BORDAS E FUNDOS DOS INPUTS E FORÇAR LETRAS BRANCAS */
     .stTextInput > div > div, 
     div[data-baseweb="base-input"],
     div[data-baseweb="input"] {
@@ -110,7 +110,7 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    input, textarea {
+    input, textarea, .stTextInput input {
         background-color: #21262d !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
