@@ -2,29 +2,63 @@ import streamlit as st
 import time
 from datetime import datetime, timedelta
 import streamlit.components.v1 as components
+import json
+import os
 
 # 1. Configuração da Página
 st.set_page_config(page_title="Timers COD", layout="wide")
 
-# 2. ESTADO GLOBAL NA SESSÃO
-if "global_timers" not in st.session_state:
-    st.session_state.global_timers = {}
+ARQUIVO_DADOS = "dados_cronometros.json"
+
+# Funções de Persistência (Salvamento Automático)
+def carregar_dados():
+    if os.path.exists(ARQUIVO_DADOS):
+        try:
+            with open(ARQUIVO_DADOS, "r", encoding="utf-8") as f:
+                dados = json.load(f)
+                return dados.get("lista_contas"), dados.get("global_timers_iso")
+        except:
+            pass
+    return None, None
+
+def salvar_dados():
+    timers_iso = {}
+    for k, v in st.session_state.global_timers.items():
+        if isinstance(v, datetime):
+            timers_iso[k] = v.isoformat()
+    dados = {
+        "lista_contas": st.session_state.lista_contas,
+        "global_timers_iso": timers_iso
+    }
+    with open(ARQUIVO_DADOS, "w", encoding="utf-8") as f:
+        json.dump(dados, f, ensure_ascii=False, indent=4)
+
+# 2. ESTADO GLOBAL NA SESSÃO (Carregando do arquivo salvo)
+contas_salvas, timers_salvos = carregar_dados()
 
 if "lista_contas" not in st.session_state:
-    contas_iniciais = []
-    for i in range(2, 12):
-        contas_iniciais.append({
-            "id": f"mkr_{i}",
-            "nome": f"Fazendeiro MKR {i}",
-            "minutos": 180
-        })
-    st.session_state.lista_contas = contas_iniciais
+    if contas_salvas:
+        st.session_state.lista_contas = contas_salvas
+    else:
+        st.session_state.lista_contas = [
+            {"id": f"mkr_{i}", "nome": f"Fazendeiro MKR {i}", "minutos": 180}
+            for i in range(2, 12)
+        ]
+
+if "global_timers" not in st.session_state:
+    st.session_state.global_timers = {}
+    if timers_salvos:
+        for k, v_str in timers_salvos.items():
+            try:
+                st.session_state.global_timers[k] = datetime.fromisoformat(v_str)
+            except:
+                pass
 
 # Função de Tempo (Horário de Brasília)
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM BORDAS TOTALMENTE ESCURECIDAS NOS INPUTS
+# 3. CSS COMPLETO COM TEMA ESCURO PROFUNDO E SEM BORDAS CLARAS
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -49,7 +83,7 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
     }
     
-    /* ESCURECER TOTALMENTE AS BORDAS E FUNDOS DOS INPUTS (TEXTO E NÚMERO) */
+    /* ESCURECER TOTALMENTE AS BORDAS E FUNDOS DOS INPUTS */
     .stTextInput > div > div, 
     .stNumberInput > div > div,
     div[data-baseweb="base-input"],
@@ -66,7 +100,6 @@ st.markdown("""
         -webkit-text-fill-color: #ffffff !important;
     }
     
-    /* Foco sutil em azul ao clicar no input */
     .stTextInput > div > div:focus-within, 
     .stNumberInput > div > div:focus-within,
     div[data-baseweb="base-input"]:focus-within {
@@ -74,7 +107,6 @@ st.markdown("""
         box-shadow: 0 0 0 1px #58a6ff !important;
     }
     
-    /* Botões de incremento/decremento do number_input (+ e -) */
     div.stNumberInput button {
         background-color: #21262d !important;
         color: #ffffff !important;
@@ -183,6 +215,7 @@ def render_timer_grid():
                     if st.button(f"Iniciar {nome_conta}", key=f"btn_{id_conta}", use_container_width=True):
                         st.session_state.global_timers[id_conta] = agora_br() + timedelta(minutes=minutos)
                         st.session_state.beep_played[id_conta] = False
+                        salvar_dados()
                         st.rerun()
     else:
         st.info("Nenhum cronômetro cadastrado. Adicione um abaixo!")
@@ -190,7 +223,7 @@ def render_timer_grid():
 render_timer_grid()
 
 # ==========================================
-# 6. PAINEL DE CONFIGURAÇÃO (Alinhado e Escuro)
+# 6. PAINEL DE CONFIGURAÇÃO
 # ==========================================
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
@@ -219,6 +252,7 @@ with col_center:
                         "nome": novo_nome.strip(),
                         "minutos": int(novos_minutos)
                     })
+                    salvar_dados()
                     st.success(f"'{novo_nome}' adicionado!")
                     st.rerun()
                 else:
@@ -241,6 +275,7 @@ with col_center:
                 if st.button("Salvar", key=f"save_{id_c}", use_container_width=True):
                     conta["nome"] = novo_nome_val
                     conta["minutos"] = int(novo_min_val)
+                    salvar_dados()
                     st.success("Salvo!")
                     st.rerun()
             with c_del:
@@ -248,6 +283,7 @@ with col_center:
                     st.session_state.lista_contas = [c for c in st.session_state.lista_contas if c["id"] != id_c]
                     if id_c in st.session_state.global_timers:
                         del st.session_state.global_timers[id_c]
+                    salvar_dados()
                     st.rerun()
 
 # 7. Sistema de Áudio (JavaScript)
