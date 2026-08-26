@@ -58,7 +58,7 @@ if "global_timers" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM TEMA ESCURO PROFUNDO E REMOÇÃO DE QUALQUER BRANCO
+# 3. CSS COMPLETO COM CORREÇÃO DE TOOLTIPS E TEMA ESCURO PROFUNDO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -81,6 +81,17 @@ st.markdown("""
         background-color: rgba(63, 185, 80, 0.05) !important;
         border: 2px solid #3fb950 !important;
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
+    }
+    
+    /* CORREÇÃO PARA O POPUP/TOOLTIP "Press Enter to apply" FICAR LEGÍVEL EM BRANCO */
+    div[data-baseweb="tooltip"], div[data-baseweb="popover"], [role="tooltip"] {
+        background-color: #21262d !important;
+        color: #ffffff !important;
+        border: 1px solid #30363d !important;
+        border-radius: 6px !important;
+    }
+    div[data-baseweb="tooltip"] *, div[data-baseweb="popover"] *, [role="tooltip"] * {
+        color: #ffffff !important;
     }
     
     /* ESCURECER TOTALMENTE O EXPANDER (ZONA DE PERIGO) E REMOVER O BRANCO */
