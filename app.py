@@ -58,7 +58,7 @@ if "global_timers" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM LETRAS BRANCAS NOS INPUTS E TEMA ESCURO PROFUNDO
+# 3. CSS COMPLETO COM LETRAS BRANCAS NÍVEIS MÁXIMOS (INCLUINDO PLACEHOLDERS)
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -114,6 +114,14 @@ st.markdown("""
         background-color: #21262d !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
+    }
+    
+    /* FORÇA OS PLACEHOLDERS E AVISOS (COMO "Press Enter to apply") A FICAREM EM BRANCO NÍVEL MÁXIMO */
+    input::placeholder, textarea::placeholder, 
+    div[data-baseweb="base-input"] *, div[data-baseweb="input"] * {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        opacity: 0.9 !important;
     }
     
     .stTextInput > div > div:focus-within, 
