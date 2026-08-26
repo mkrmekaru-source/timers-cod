@@ -58,7 +58,7 @@ if "global_timers" not in st.session_state:
 def agora_br():
     return datetime.utcnow() - timedelta(hours=3)
 
-# 3. CSS COMPLETO COM SUPRESSÃO TOTAL DE POPOVERS E TEMA ESCURO
+# 3. CSS COMPLETO COM TEMA ESCURO PROFUNDO E LIMPO
 st.markdown("""
     <style>
     header {visibility: hidden;}
@@ -81,14 +81,6 @@ st.markdown("""
         background-color: rgba(63, 185, 80, 0.05) !important;
         border: 2px solid #3fb950 !important;
         box-shadow: 0 0 15px rgba(63, 185, 80, 0.3) !important;
-    }
-    
-    /* BLOQUEIO TOTAL E DEFINITIVO DE QUALQUER POPOVER / TOOLTIP DO INPUT */
-    div[data-baseweb="popover"], div[data-baseweb="tooltip"], [role="tooltip"], div[id*="popover"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
     }
     
     /* ESCURECER TOTALMENTE O EXPANDER (ZONA DE PERIGO) E REMOVER O BRANCO */
@@ -145,7 +137,7 @@ st.markdown("""
     }
     
     /* PADRONIZAÇÃO DE TODOS OS BOTÕES NO TEMA ESCURO */
-    .stButton > button, [data-testid="stFormSubmitButton"] > button { 
+    .stButton > button { 
         background-color: #21262d !important;
         color: #ffffff !important;
         border: 1px solid #30363d !important;
@@ -155,7 +147,7 @@ st.markdown("""
         width: 100% !important;
     }
     
-    .stButton > button:hover, [data-testid="stFormSubmitButton"] > button:hover {
+    .stButton > button:hover {
         border-color: #58a6ff !important;
         color: #58a6ff !important;
         background-color: #30363d !important;
@@ -260,29 +252,28 @@ with col_center:
     st.subheader("⚙️ Adicionar Novo Cronômetro")
     
     with st.container(border=True):
-        with st.form("form_adicionar", clear_on_submit=True):
-            col_a1, col_a2, col_a3 = st.columns([2, 1, 1])
-            with col_a1:
-                novo_nome = st.text_input("Nome do Fazendeiro", placeholder="Ex: MKR 12")
-            with col_a2:
-                novos_minutos = st.number_input("Minutos", min_value=1, max_value=1440, value=180, step=1)
-            with col_a3:
-                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-                btn_adicionar = st.form_submit_button("➕ Adicionar", use_container_width=True)
-                
-            if btn_adicionar:
-                if novo_nome.strip():
-                    novo_id = f"custom_{time.time()}"
-                    st.session_state.lista_contas.append({
-                        "id": novo_id,
-                        "nome": novo_nome.strip(),
-                        "minutos": int(novos_minutos)
-                    })
-                    salvar_dados()
-                    st.success(f"'{novo_nome}' adicionado!")
-                    st.rerun()
-                else:
-                    st.error("Digite um nome válido.")
+        col_a1, col_a2, col_a3 = st.columns([2, 1, 1])
+        with col_a1:
+            novo_nome = st.text_input("Nome do Fazendeiro", placeholder="Ex: MKR 12", key="input_add_nome")
+        with col_a2:
+            novos_minutos = st.number_input("Minutos", min_value=1, max_value=1440, value=180, step=1, key="input_add_min")
+        with col_a3:
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            btn_adicionar = st.button("➕ Adicionar", key="btn_add_novo", use_container_width=True)
+            
+        if btn_adicionar:
+            if novo_nome.strip():
+                novo_id = f"custom_{time.time()}"
+                st.session_state.lista_contas.append({
+                    "id": novo_id,
+                    "nome": novo_nome.strip(),
+                    "minutos": int(novos_minutos)
+                })
+                salvar_dados()
+                st.success(f"'{novo_nome}' adicionado!")
+                st.rerun()
+            else:
+                st.error("Digite um nome válido.")
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("✏️ Gerenciar / Deletar Existentes")
