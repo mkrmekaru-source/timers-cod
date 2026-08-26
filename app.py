@@ -301,11 +301,26 @@ if tocar_bip:
     components.html(codigo_js, height=0, width=0)
 
 
-    # Botão de Reset Geral para Padrão
-st.markdown("<br>", unsafe_allow_html=True)
-if st.button("🔄 Restaurar Padrão de Fábrica (2 a 11)", use_container_width=True):
-  if os.path.exists(ARQUIVO_DADOS):
-    os.remove(ARQUIVO_DADOS)  # Apaga o arquivo salvo
-  st.session_state.clear()  # Limpa a memória da sessão
-  st.success("Painel resetado para o padrão com sucesso!")
-  st.rerun()
+
+
+
+
+# Zona de Perigo protegida contra cliques acidentais
+st.markdown("<br><br>", unsafe_allow_html=True)
+with st.expander("⚠️ Zona de Perigo (Configurações Avançadas)"):
+  st.warning(
+      "Atenção: Restaurar o padrão apagará todos os cronômetros personalizados"
+      " e ajustes atuais."
+  )
+  confirmar_reset = st.checkbox(
+      "Sim, eu tenho certeza que desejo resetar tudo para o padrão"
+  )
+
+  if st.button(
+      "🔄 Restaurar Padrão de Fábrica (2 a 11)", disabled=not confirmar_reset
+  ):
+    if os.path.exists(ARQUIVO_DADOS):
+      os.remove(ARQUIVO_DADOS)  # Apaga o arquivo salvo
+    st.session_state.clear()  # Limpa a memória da sessão
+    st.success("Painel resetado para o padrão com sucesso!")
+    st.rerun()
